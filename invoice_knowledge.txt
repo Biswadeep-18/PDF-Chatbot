@@ -1,0 +1,40 @@
+# STANDARD REQUIREMENTS FOR EXPORT DOCUMENTS
+
+## COMMERCIAL INVOICE (Standard Requirements)
+A commercial invoice is a legal document between the exporter and the importer in an international transaction and serves as the basis for custom duties.
+Mandatory Fields:
+1.  **Invoice Number and Date**: Unique identifier and issue date.
+2.  **Seller (Exporter) Information**: Full name, address, and contact details.
+3.  **Buyer (Importer) Information**: Full name, address, and contact details.
+4.  **Consignee Information**: If different from the buyer.
+5.  **Detailed Description of Goods**: Including name, materials, and quality. (Avoid vague terms like "samples").
+6.  **HS Code (Harmonized System)**: At least 6 digits for tariff accuracy.
+7.  **Quantity and Unit of Measure**: Number of units for each item.
+8.  **Unit Price and Total Value**: Price per unit and total amount.
+9.  **Currency**: E.g., USD, EUR, INR.
+10. **Country of Origin**: Where the goods were manufactured.
+11. **Incoterms**: E.g., FOB (Free on Board), CIF (Cost, Insurance, and Freight).
+12. **Weight and Dimensions**: Gross and net weight.
+13. **Payment Terms**: Bank details and method of payment.
+14. **Signature and Stamp**: Authentication of the document.
+
+## PACKING LIST (Standard Requirements)
+A packing list provides details about the physical shipment and is used by freight forwarders and customs to verify the cargo.
+Mandatory Fields:
+1.  **Date and Reference Number**: Corresponding to the Commercial Invoice.
+2.  **Contact Information**: Shipper and Consignee details.
+3.  **Total Packages**: Number of cartons, pallets, or containers.
+4.  **Content per Package**: Detailed breakdown of items in each carton.
+5.  **Net Weight**: Weight of the goods only.
+6.  **Gross Weight**: Total weight including packaging.
+7.  **Dimensions**: Length, width, and height of each package/pallet.
+8.  **Shipping Marks**: Any specific numbering or identification on packages.
+
+## COMMON INVOICE ERRORS TO CHECK
+- Missing HS Codes for international shipments.
+- Discrepancy between Unit Price * Quantity and Total Amount.
+- Missing Incoterms.
+- Vague descriptions of goods.
+- Missing Tax ID (GST/VAT) for relevant jurisdictions.
+- Currency not specified.
+- Country of Origin missing.

@@ -1025,7 +1025,7 @@ def main():
             with open(image_path, "rb") as img_file:
                 return base64.b64encode(img_file.read()).decode()
 
-        img_base64 = get_base64_image("eatech-logo.png")
+        img_base64 = get_base64_image("robot-2.png")
 
         st.markdown(f"""
         <style>
@@ -1036,6 +1036,13 @@ def main():
             padding: 20px;
             border-radius: 10px;
             flex-direction: row;
+        }}
+        
+        .logo {{
+            width: 80px;
+            height: 80px;
+            margin-right: 20px;
+            border-radius: 10px;
         }}
 
         .robot {{
@@ -1154,6 +1161,7 @@ def main():
         </style>
 
         <div class="header">
+            <img src="data:image/png;base64,{get_base64_image('eatech-logo.png')}" class="logo" alt="EATECH Logo">
             <div class="title">
                 EATECH.AI
             </div>

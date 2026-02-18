@@ -833,15 +833,188 @@ def main():
     
     st.markdown("""
     <style>
+    * {
+        color: #000000;
+    }
+    
+    body, .main, .stApp, .stAppHeader {
+        background-color: #a8e6cf !important;
+    }
+    
+    .stAppHeader {
+        background-color: #a8e6cf !important;
+    }
+    
+    header {
+        background-color: #a8e6cf !important;
+    }
+    
+    .stAppToolbar {
+        background-color: #a8e6cf !important;
+    }
+    
+    [data-testid="stHeader"] {
+        background-color: #a8e6cf !important;
+    }
+    
     .stAlert {
         padding: 1rem;
         border-radius: 0.5rem;
+        background-color: #c5f0e8 !important;
+        border: 2px solid #1f77b4;
+        color: #000000 !important;
     }
+    
     .feature-box {
-        background-color: #f0f2f6;
+        background-color: #c5f0e8;
         padding: 1.5rem;
         border-radius: 0.5rem;
         margin: 1rem 0;
+        border-left: 5px solid #1f77b4;
+        color: #000000;
+    }
+    
+    .blue-text {
+        color: #1f77b4 !important;
+        font-weight: 600;
+    }
+    
+    .green-text {
+        color: #22a447 !important;
+        font-weight: 700;
+    }
+    
+    .light-green-bg {
+        background-color: #a8e6cf !important;
+    }
+    
+    .white-bg {
+        background-color: #ffffff !important;
+        border: 2px solid #1f77b4;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        color: #1f77b4 !important;
+        font-weight: 700;
+    }
+    
+    .exporter, .importer, .name-field, .company-name {
+        color: #22a447 !important;
+        font-weight: 700;
+    }
+    
+    p, label, span {
+        color: #000000 !important;
+    }
+    
+    .stTextInput, .stTextArea, .stSelectbox, .stNumberInput {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+    
+    /* Upload file area styling */
+    [data-testid="stFileUploadDropzone"] {
+        background-color: #c5f0e8 !important;
+        border: 3px dashed #1f77b4 !important;
+        border-radius: 10px !important;
+    }
+    
+    /* File upload area text */
+    .st-emotion-cache-tv2gmp {
+        background-color: #c5f0e8 !important;
+    }
+    
+    /* Browse files button */
+    .stButton > button {
+        background-color: #1f77b4 !important;
+        color: #ffffff !important;
+        font-weight: 600;
+        border: 2px solid #0d3a66;
+        border-radius: 8px;
+    }
+    
+    .stButton > button:hover {
+        background-color: #0d3a66 !important;
+        color: #ffffff !important;
+    }
+    
+    /* Small round buttons for expanders/updates */
+    .stExpanderButton {
+        padding: 10px 15px !important;
+        border-radius: 20px !important;
+        background-color: #1f77b4 !important;
+        color: #ffffff !important;
+        font-size: 14px !important;
+        height: 40px !important;
+    }
+    
+    /* Expander styling for regulation updates */
+    [data-testid="stExpander"] {
+        background-color: #c5f0e8 !important;
+        border: 2px solid #1f77b4 !important;
+        border-radius: 10px !important;
+    }
+    
+    .stExpander {
+        background-color: #c5f0e8 !important;
+        border: 2px solid #1f77b4 !important;
+        border-radius: 10px !important;
+    }
+    
+    .stExpander > div > div > button {
+        background-color: #c5f0e8 !important;
+        padding: 8px 12px !important;
+        border-radius: 15px !important;
+        min-height: 35px !important;
+    }
+    
+    .stExpander > div > div > div {
+        color: #000000 !important;
+    }
+    
+    .stSidebar {
+        background-color: #c5f0e8 !important;
+    }
+    
+    .stSidebar h1, .stSidebar h2, .stSidebar h3 {
+        color: #1f77b4 !important;
+    }
+    
+    .stSidebar p, .stSidebar label {
+        color: #000000 !important;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #a8e6cf;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: #c5f0e8 !important;
+        color: #000000 !important;
+    }
+    
+    .stDivider {
+        color: #1f77b4 !important;
+    }
+    
+    .css-1y4p5pa {
+        background-color: #ffffff !important;
+    }
+    
+    .css-qrbaxs {
+        background-color: #c5f0e8 !important;
+    }
+    
+    .st-emotion-cache-ocqkz7 {
+        background-color: #a8e6cf !important;
+    }
+    
+    .st-emotion-cache-1gulkj5 {
+        background-color: #a8e6cf !important;
+    }
+    
+    .st-emotion-cache-uf99v {
+        background-color: #a8e6cf !important;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -852,44 +1025,147 @@ def main():
             with open(image_path, "rb") as img_file:
                 return base64.b64encode(img_file.read()).decode()
 
-        img_base64 = get_base64_image("robot-2.png")
+        img_base64 = get_base64_image("eatech-logo.png")
 
         st.markdown(f"""
         <style>
         .header {{
             display: flex;
             align-items: center;
+            background-color: #a8e6cf;
+            padding: 20px;
+            border-radius: 10px;
+            flex-direction: row;
         }}
 
         .robot {{
-            animation: float 3s ease-in-out infinite;
-            margin-right: 15px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            z-index: 999;
+            animation: moveAround 20s infinite linear;
+        }}
+        
+        .robot img {{
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }}
+        
+        .robot::after {{
+            content: "Ask me anything! 💬";
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1f77b4;
+            color: #ffffff;
+            padding: 12px 18px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 4px 8px rgba(31, 119, 180, 0.3);
+            z-index: 10;
+            animation: fadeInDown 0.5s ease-in;
+        }}
+        
+        .robot::before {{
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #1f77b4;
+            z-index: 10;
         }}
 
-        @keyframes float {{
-            0% {{ transform: translateY(0px); }}
-            50% {{ transform: translateY(-20px); }}
-            100% {{ transform: translateY(0px); }}
+        @keyframes moveAround {{
+            0% {{ 
+                top: 50px;
+                right: 50px;
+            }}
+            10% {{ 
+                top: 100px;
+                right: 100px;
+            }}
+            20% {{ 
+                top: 200px;
+                right: 200px;
+            }}
+            30% {{ 
+                top: 300px;
+                right: 100px;
+            }}
+            40% {{ 
+                top: 400px;
+                right: 50px;
+            }}
+            50% {{ 
+                top: 300px;
+                right: 150px;
+            }}
+            60% {{ 
+                top: 200px;
+                right: 300px;
+            }}
+            70% {{ 
+                top: 100px;
+                right: 200px;
+            }}
+            80% {{ 
+                top: 150px;
+                right: 80px;
+            }}
+            90% {{ 
+                top: 250px;
+                right: 120px;
+            }}
+            100% {{ 
+                top: 50px;
+                right: 50px;
+            }}
+        }}
+        
+        @keyframes fadeInDown {{
+            from {{
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }}
+            to {{
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }}
         }}
 
         .title {{
             font-size: 60px;
             font-weight: bold;
+            color: #22a447;
+            text-shadow: 2px 2px 4px rgba(31, 119, 180, 0.3);
+            flex: 1;
         }}
         </style>
 
         <div class="header">
-            <div class="robot">
-                <img src="data:image/png;base64,{img_base64}" width="250">
-            </div>
             <div class="title">
-                Asutosh.AI
+                EATECH.AI
             </div>
+        </div>
+        
+        <div class="robot">
+            <img src="data:image/png;base64,{img_base64}" width="200">
         </div>
         """, unsafe_allow_html=True)
     except:
         
-        st.title("🤖 Asutosh.AI")
+        st.title("🤖 EATECH.AI")
 
     
     

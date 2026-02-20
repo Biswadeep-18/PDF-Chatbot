@@ -791,45 +791,46 @@ def main():
     
     st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;600;800&display=swap');
+
     * {
         color: #000000;
+        font-family: 'Inter', sans-serif;
     }
     
-    body, .main, .stApp, .stAppHeader {
-        background-color: #a8e6cf !important;
+    body, .main, .stApp {
+        background: radial-gradient(circle at top left, #a8e6cf 0%, #c5f0e8 100%) !important;
     }
     
-    .stAppHeader {
-        background-color: #a8e6cf !important;
-    }
-    
-    header {
-        background-color: #a8e6cf !important;
-    }
-    
-    .stAppToolbar {
-        background-color: #a8e6cf !important;
-    }
-    
-    [data-testid="stHeader"] {
-        background-color: #a8e6cf !important;
+    .stAppHeader, header, [data-testid="stHeader"] {
+        background-color: transparent !important;
     }
     
     .stAlert {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        background-color: #c5f0e8 !important;
-        border: 2px solid #1f77b4;
+        padding: 1.5rem;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(31, 119, 180, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         color: #000000 !important;
     }
     
     .feature-box {
-        background-color: #c5f0e8;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        margin: 1rem 0;
-        border-left: 5px solid #1f77b4;
-        color: #000000;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(8px);
+        padding: 1.8rem;
+        border-radius: 20px;
+        margin: 1.2rem 0;
+        border: 1px solid rgba(31, 119, 180, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .feature-box:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.8);
     }
     
     .blue-text {
@@ -853,12 +854,13 @@ def main():
     
     h1, h2, h3, h4, h5, h6 {
         color: #1f77b4 !important;
+        font-family: 'Outfit', sans-serif !important;
         font-weight: 700;
     }
     
     .exporter, .importer, .name-field, .company-name {
         color: #22a447 !important;
-        font-weight: 700;
+        font-weight: 800;
     }
     
     p, label, span {
@@ -909,28 +911,38 @@ def main():
     
     /* Upload file area styling */
     [data-testid="stFileUploadDropzone"] {
-        background-color: #c5f0e8 !important;
-        border: 3px dashed #1f77b4 !important;
-        border-radius: 10px !important;
+        background: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(5px);
+        border: 2px dashed #1f77b4 !important;
+        border-radius: 20px !important;
+        transition: all 0.3s ease;
     }
-    
-    /* File upload area text */
-    .st-emotion-cache-tv2gmp {
-        background-color: #c5f0e8 !important;
+
+    [data-testid="stFileUploadDropzone"]:hover {
+        border-color: #22a447 !important;
+        background: rgba(255, 255, 255, 0.6) !important;
     }
     
     /* Browse files button */
     .stButton > button {
-        background-color: #1f77b4 !important;
+        background: linear-gradient(135deg, #1f77b4 0%, #0d3a66 100%) !important;
         color: #ffffff !important;
-        font-weight: 600;
-        border: 2px solid #0d3a66;
-        border-radius: 8px;
+        font-weight: 700 !important;
+        font-family: 'Outfit', sans-serif !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 0.6rem 1.2rem !important;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.3) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     
     .stButton > button:hover {
-        background-color: #0d3a66 !important;
-        color: #ffffff !important;
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(31, 119, 180, 0.5) !important;
+    }
+
+    .stButton > button:active {
+        transform: translateY(0) scale(0.98) !important;
     }
     
     /* Small round buttons for expanders/updates */
@@ -989,7 +1001,8 @@ def main():
     }
     
     .stDivider {
-        color: #1f77b4 !important;
+        border-bottom: 2px solid rgba(31, 119, 180, 0.2) !important;
+        margin: 2rem 0 !important;
     }
     
     .css-1y4p5pa {
@@ -1027,13 +1040,15 @@ def main():
         .header {{
             display: flex;
             align-items: center;
-            background-color: #a8e6cf;
-            padding: 15px 25px;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(15px);
+            padding: 30px 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
             flex-direction: row;
             justify-content: space-between;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
         }}
         
         .logo-title-container {{
@@ -1042,23 +1057,28 @@ def main():
         }}
         
         .logo {{
-            width: 60px;
-            height: 60px;
-            margin-right: 15px;
-            border-radius: 8px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            width: 130px;
+            height: 130px;
+            margin-right: 30px;
+            border-radius: 20px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }}
+
+        .logo:hover {{
+            transform: rotate(-8deg) scale(1.1);
         }}
 
         .robot-header {{
-            width: 100px;
-            height: 100px;
+            width: 200px;
+            height: 200px;
             cursor: pointer;
-            transition: transform 0.3s;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
         }}
         
         .robot-header:hover {{
-            transform: scale(1.1);
+            transform: scale(1.2) translateY(-10px);
         }}
 
         .robot-header img {{
@@ -1068,48 +1088,51 @@ def main():
         }}
         
         .robot-header::after {{
-            content: "Ask me anything! 💬";
+            content: "Ready to assist! 🗨️";
             position: absolute;
-            top: -45px;
+            top: -75px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #1f77b4;
+            background: linear-gradient(135deg, #1f77b4, #0d3a66);
             color: #ffffff;
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 600;
+            padding: 14px 22px;
+            border-radius: 18px;
+            font-size: 18px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
             white-space: nowrap;
-            box-shadow: 0 4px 8px rgba(31, 119, 180, 0.2);
+            box-shadow: 0 12px 30px rgba(31, 119, 180, 0.4);
             z-index: 10;
             animation: bounce 2s infinite;
         }}
 
         @keyframes bounce {{
             0%, 20%, 50%, 80%, 100% {{transform: translateX(-50%) translateY(0);}}
-            40% {{transform: translateX(-50%) translateY(-8px);}}
-            60% {{transform: translateX(-50%) translateY(-4px);}}
+            40% {{transform: translateX(-50%) translateY(-15px);}}
+            60% {{transform: translateX(-50%) translateY(-8px);}}
         }}
 
         .robot-header::before {{
             content: "";
             position: absolute;
-            top: -10px;
+            top: -25px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 8px solid transparent;
-            border-right: 8px solid transparent;
-            border-top: 8px solid #1f77b4;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 15px solid #1f77b4;
             z-index: 10;
         }}
 
         .title {{
-            font-size: 45px;
-            font-weight: bold;
-            color: #22a447;
-            text-shadow: 1px 1px 3px rgba(31, 119, 180, 0.2);
+            font-size: 85px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            color: #1a8b3d;
+            letter-spacing: -4px;
+            text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.05);
         }}
 
         /* Hide the robot button but keep the logic */

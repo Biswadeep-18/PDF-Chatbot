@@ -1300,8 +1300,7 @@ def main():
                             st.session_state['quick_scan_results'] = quick_invoice_scan(text)
                             break
                     
-                    st.success(f"✅ Processed {len(uploaded_files)} document(s)!")
-                    st.balloons()
+                    st.success("Your document are processed complete ✅")
         
         
         if st.session_state['pdf_texts']:
@@ -1536,8 +1535,11 @@ def main():
             """)
         
         
-        # Handle JSON button click or user question
-        if quick_action == "convert_to_json_button_clicked" or (user_question and st.session_state['vectorstore']):
+        # Handle JSON button click, other quick action buttons, or user question
+        if quick_action or (user_question and st.session_state['vectorstore']):
+            # Use quick_action as the question if it was just clicked
+            final_query = quick_action if (quick_action and quick_action != "convert_to_json_button_clicked") else user_question
+            
             with st.spinner("🤖 Processing your request..."):
                 
                 # If JSON button was clicked, process all documents
@@ -1630,10 +1632,10 @@ def main():
                     })
                     
                 # elif user_question:
-                elif user_question:
+                elif final_query:
                     # Normal question processing
                     if task_type == "Auto-detect":
-                        detected_task = detect_task_type(user_question)
+                        detected_task = detect_task_type(final_query)
                     else:
                         task_map = {
                             "Convert to JSON": "convert_to_json",
@@ -1657,14 +1659,14 @@ def main():
                     
                     docs, context_by_source = get_relevant_context(
                         st.session_state['vectorstore'],
-                        user_question,
+                        final_query,
                         k=k_value
                     )
                     
                     
                     response = generate_response(
                         client,
-                        user_question,
+                        final_query,
                         context_by_source,
                         detected_task
                     )
@@ -1744,7 +1746,7 @@ def main():
                     
                     
                     st.session_state['chat_history'].append({
-                        'question': user_question,
+                        'question': final_query,
                         'answer': response,
                         'task_type': detected_task,
                         'sources': list(context_by_source.keys()),

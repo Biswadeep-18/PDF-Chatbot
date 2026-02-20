@@ -1428,7 +1428,6 @@ def main():
         
     else:
         
-        st.markdown("## 💬 Ask Me Anything")
         
         
         st.markdown("**Quick Actions:**")

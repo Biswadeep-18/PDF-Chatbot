@@ -122,25 +122,22 @@ CONSEQUENCES:
 - LOW RISK: Minor delays, may require clarification
 """
 
-REGULATION_UPDATES = {
-    "2025-02": {
-        "title": "New HS Code Requirements (Feb 2025)",
-        "description": "Customs now requires 8-digit HS codes instead of 6-digit for electronics and textiles",
-        "impact": "HIGH",
-        "action_required": "Update all invoices with 8-digit HS codes for electronics/textiles"
+EATECH_INFO = {
+    "name": "EA Tech Corporations Pvt. Ltd.",
+    "brand": "EATECH.AI",
+    "description": "EA Tech Corporations Pvt. Ltd. is a global technology leader specializing in IT-enabled integrated solutions, digital transformation, and intelligent automation.",
+    "mission": "To leverage advanced technology and innovative solutions to empower businesses, promoting growth and operational efficiency through IT-driven strategies.",
+    "vision": "To be the global leader in delivering innovative IT solutions that drive digital transformation for governments and businesses alike.",
+    "services": {
+        "AI & Machine Learning": "Intelligent automation and AI-driven data extraction.",
+        "Web Development": "Frontend, Backend, and Full-stack e-commerce solutions.",
+        "Digital Marketing": "SEO, SMO, and PPC campaigns for global visibility.",
+        "UI/UX Design": "User-centric design, visual research, and consulting.",
+        "Cloud & Security": "Cyber security strategies and cloud optimization.",
+        "Industrial Automation": "SCADA, PLC Panel, and smart factory solutions.",
+        "Software Products": "EazzQuote, EazzBooks, EazzEdu, and EazzHR."
     },
-    "2025-01": {
-        "title": "GST Portal Enhancement (Jan 2025)",
-        "description": "New e-invoice system mandatory for exports above $10,000",
-        "impact": "MEDIUM",
-        "action_required": "Register on e-invoice portal and generate IRN for high-value exports"
-    },
-    "2024-12": {
-        "title": "RCEP Trade Agreement Updates (Dec 2024)",
-        "description": "Reduced duties for exports to RCEP countries (ASEAN, China, Japan, Korea)",
-        "impact": "POSITIVE",
-        "action_required": "Apply for Certificate of Origin to avail reduced duties"
-    }
+    "presence": "India (Bhubaneswar, Hyderabad), UAE (Dubai), Saudi Arabia (Riyadh), and USA (Scottsdale)."
 }
 
 
@@ -788,14 +785,10 @@ def detect_task_type(query: str) -> str:
         return "answer"
 
 
-def get_regulation_updates() -> List[Dict]:
-    """Get recent regulation updates"""
-    updates = []
-    for date_key in sorted(REGULATION_UPDATES.keys(), reverse=True):
-        update = REGULATION_UPDATES[date_key].copy()
-        update['date'] = date_key
-        updates.append(update)
-    return updates
+
+def get_company_info() -> Dict:
+    """Get EATECH company details"""
+    return EATECH_INFO
 
 
 def quick_invoice_scan(invoice_text: str) -> Dict:
@@ -1337,16 +1330,27 @@ def main():
                 st.rerun()
     
     st.markdown("---")
-    with st.expander("🔔 Latest Regulation Updates & Alerts", expanded=False):
-        updates = get_regulation_updates()
-        for update in updates[:3]:  # Show latest 3
-            impact_color = {"HIGH": "🔴", "MEDIUM": "🟡", "POSITIVE": "🟢"}.get(update['impact'], "⚪")
-            st.markdown(f"""
-            **{impact_color} {update['title']}** ({update['date']})  
-            {update['description']}  
-            *Action Required:* {update['action_required']}
-            """)
-            st.markdown("---")
+    st.markdown("---")
+    with st.expander("🏢 Documentation: About EATECH.AI", expanded=False):
+        info = get_company_info()
+        st.markdown(f"### {info['name']}")
+        st.info(info['description'])
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### 🎯 Our Mission")
+            st.write(info['mission'])
+        with col2:
+            st.markdown("#### 👁️ Our Vision")
+            st.write(info['vision'])
+            
+        st.markdown("#### 🛠️ Our Expertise & Services")
+        for service, desc in info['services'].items():
+            st.markdown(f"- **{service}:** {desc}")
+            
+        st.markdown("---")
+        st.markdown(f"**🌍 Global Presence:** {info['presence']}")
+        st.markdown(f"**🔗 Follow us:** [LinkedIn](https://www.linkedin.com/company/eatech-pvt-ltd/)")
     
     
     

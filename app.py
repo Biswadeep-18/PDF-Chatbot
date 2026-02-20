@@ -1435,9 +1435,9 @@ def main():
         user_docs = [name for name in st.session_state['pdf_texts'].keys() if "Knowledge Base" not in name]
         
         if len(user_docs) >= 2:
-            col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+            col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
         else:
-            col1, col2, col3, col4, col5, col6 = st.columns(6)
+            col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
         
         quick_action = None
         with col1:
@@ -1445,24 +1445,28 @@ def main():
                 quick_action = "convert_to_json_button_clicked"
         
         with col2:
+            if st.button("📝 Summary"):
+                quick_action = "Summarize all uploaded documents and give me a clear overview"
+        
+        with col3:
             if st.button("🔍 Check Errors"):
                 quick_action = "Check this invoice for all errors and missing mandatory fields"
-        with col3:
+        with col4:
             if st.button("📄 Generate Docs"):
                 quick_action = "Generate export documents (Commercial Invoice and Packing List) from this data"
-        with col4:
+        with col5:
             if st.button("📚 Explain GST"):
                 quick_action = "Explain GST and customs duty concepts in simple language for my export"
-        with col5:
+        with col6:
             if st.button("📋 Checklist"):
                 quick_action = "Generate a complete document checklist for this export transaction"
-        with col6:
+        with col7:
             if st.button("⚠️ Risk Analysis"):
                 quick_action = "Analyze compliance risks in these documents"
         
         # Invoice comparison button (only show if 2+ invoices)
         if len(user_docs) >= 2:
-            with col7:
+            with col8:
                 if st.button("🔀 Compare Invoices"):
                     quick_action = "Compare all uploaded invoices and show me a detailed table of products, quantities, prices, and identify missing items in each invoice"
         

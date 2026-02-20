@@ -145,13 +145,22 @@ REGULATION_UPDATES = {
 
 
 
-def process_pdf(pdf_file) -> tuple:
-    """Extract text from a single PDF file"""
+def process_pdf(pdf_file, max_pages=10) -> tuple:
+    """Extract text from a single PDF file with a page limit"""
     pdf_reader = PdfReader(pdf_file)
     text = ""
-    for page_num, page in enumerate(pdf_reader.pages):
-        page_text = page.extract_text()
+    num_pages = len(pdf_reader.pages)
+    
+    # Limit number of pages to process to avoid token limits
+    pages_to_process = min(num_pages, max_pages)
+    
+    for page_num in range(pages_to_process):
+        page_text = pdf_reader.pages[page_num].extract_text()
         text += f"\n--- Page {page_num + 1} ---\n{page_text}"
+    
+    if num_pages > max_pages:
+        text += f"\n\n... [Note: Only first {max_pages} pages were processed to stay within AI limits] ..."
+        
     return text, pdf_file.name
 
 
@@ -316,7 +325,15 @@ RULES:
 
 Return the complete JSON structure."""
 
-    user_prompt = f"""Document Content:
+    # Limit text size to ~25,000 characters (approx 8k-10k tokens) to stay within Groq limits
+    max_chars = 25000
+    is_truncated = False
+    
+    if len(pdf_text) > max_chars:
+        pdf_text = pdf_text[:max_chars] + "\n... [Note: Content truncated for size] ..."
+        is_truncated = True
+
+    user_prompt = f"""Document Content (Source: {filename}):
 
 {pdf_text}
 

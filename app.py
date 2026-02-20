@@ -1139,6 +1139,7 @@ def main():
             height: 200px;
             z-index: 999;
             animation: moveAround 20s infinite linear;
+            cursor: pointer;
         }}
         
         .robot img {{
@@ -1147,7 +1148,7 @@ def main():
             object-fit: contain;
         }}
         
-        .robot::after {{
+        .robot-btn::after {{
             content: "Ask me anything! 💬";
             position: absolute;
             top: -60px;
@@ -1171,7 +1172,7 @@ def main():
             60% {{transform: translateX(-50%) translateY(-5px);}}
         }}
         
-        .robot::before {{
+        .robot-btn::before {{
             content: "";
             position: absolute;
             top: -15px;
@@ -1185,51 +1186,32 @@ def main():
             z-index: 10;
         }}
 
-        @keyframes moveAround {{
-            0% {{ 
-                top: 50px;
-                right: 50px;
-            }}
-            10% {{ 
-                top: 100px;
-                right: 100px;
-            }}
-            20% {{ 
-                top: 200px;
-                right: 200px;
-            }}
-            30% {{ 
-                top: 300px;
-                right: 100px;
-            }}
-            40% {{ 
-                top: 400px;
-                right: 50px;
-            }}
-            50% {{ 
-                top: 300px;
-                right: 150px;
-            }}
-            60% {{ 
-                top: 200px;
-                right: 300px;
-            }}
-            70% {{ 
-                top: 100px;
-                right: 200px;
-            }}
-            80% {{ 
-                top: 150px;
-                right: 80px;
-            }}
-            90% {{ 
-                top: 250px;
-                right: 120px;
-            }}
-            100% {{ 
-                top: 50px;
-                right: 50px;
-            }}
+        .robot-btn {{
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 100px;
+            height: 100px;
+            z-index: 1000;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }}
+        
+        .robot-btn:hover {{
+            transform: scale(1.1);
+        }}
+
+        /* Style the actual streamlit button to be invisible but cover the mascot */
+        div[data-testid="stButton"] button:has(div[data-testid="stMarkdownContainer"] p:contains("🤖")) {{
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 120px;
+            height: 120px;
+            z-index: 1001;
+            background: transparent !important;
+            border: none !important;
+            color: transparent !important;
         }}
         
         @keyframes fadeInDown {{
@@ -1259,10 +1241,15 @@ def main():
             </div>
         </div>
         
-        <div class="robot">
-            <img src="data:image/png;base64,{img_base64}" width="200">
+        <div class="robot-btn">
+            <img src="data:image/png;base64,{img_base64}" width="100">
         </div>
         """, unsafe_allow_html=True)
+        
+        # Hidden button that triggers when you click the mascot area
+        if st.button("🤖", key="mascot_click_btn"):
+            st.session_state['mascot_asked'] = True
+            st.rerun()
     except:
         
         st.title("🤖 EATECH.AI")
@@ -1483,6 +1470,12 @@ def main():
             col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
         
         quick_action = None
+        
+        # Mascot trigger logic
+        if st.session_state.get('mascot_asked'):
+            quick_action = "I want to ask you a question! Can you help me with something general or real-time news?"
+            st.session_state['mascot_asked'] = False # Reset
+            
         with col1:
             if st.button("📊 Extract JSON"):
                 quick_action = "convert_to_json_button_clicked"

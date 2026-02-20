@@ -314,14 +314,15 @@ For INVOICES, extract:
 For OTHER DOCUMENTS (Packing List, Bill of Lading, etc.), adapt the structure accordingly.
 
 RULES:
-1. Extract ALL fields present in the document
-2. Use null or empty string for missing fields
-3. Convert all numbers to appropriate numeric types
-4. Maintain proper data types (strings, numbers, arrays, objects)
-5. Include ALL line items/products found
-6. Extract dates in ISO format (YYYY-MM-DD) when possible
-7. Return ONLY valid JSON, no additional text or explanation
-8. Be thorough - extract even small details
+1. Extract ONLY information that is explicitly present in the document.
+2. CRITICAL: DO NOT guess, invent, or hallucinate HS codes, tax IDs, or any other data. 
+3. If a field (like HS Code) is not found in the text, use null or an empty string.
+4. Convert all numbers to appropriate numeric types.
+5. Maintain proper data types (strings, numbers, arrays, objects).
+6. Include ALL line items/products found.
+7. Extract dates in ISO format (YYYY-MM-DD) when possible.
+8. Return ONLY valid JSON, no additional text or explanation.
+9. Be thorough - extract even small details, but ONLY if they are there.
 
 Return the complete JSON structure."""
 
@@ -713,15 +714,16 @@ For INVOICES, extract and return in this JSON structure:
 For OTHER DOCUMENTS, adapt the structure accordingly.
 
 CRITICAL RULES:
-1. Extract ALL fields present in the document
-2. Use null or empty string for missing fields
-3. Convert all numbers to appropriate numeric types (not strings)
-4. Maintain proper JSON data types (strings, numbers, arrays, objects)
-5. Include ALL line items/products found
-6. Extract dates in ISO format (YYYY-MM-DD) when possible
-7. Return ONLY valid JSON - no additional text, no explanations, no markdown
-8. Be thorough - extract even small details
-9. Ensure the JSON is properly formatted and can be parsed
+1. Extract ONLY information that is explicitly present in the document.
+2. STRICT FORBIDDEN: DO NOT guess, invent, or hallucinate HS codes, tax IDs, or any other data that is not in the text.
+3. Use null or empty string for missing fields. Do not try to fill them with guesses based on product names.
+4. Convert all numbers to appropriate numeric types (not strings).
+5. Maintain proper JSON data types (strings, numbers, arrays, objects).
+6. Include ALL line items/products found.
+7. Extract dates in ISO format (YYYY-MM-DD) when possible.
+8. Return ONLY valid JSON - no additional text, no explanations, no markdown.
+9. Be thorough - extract even small details, but ONLY if they are there.
+10. Ensure the JSON is properly formatted and can be parsed.
 
 Return ONLY the JSON structure, nothing else."""
     }

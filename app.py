@@ -1208,7 +1208,7 @@ def main():
                 <img src="data:image/png;base64,{get_base64_image('eatech-logo.png')}" class="logo" alt="EATECH Logo">
                 <div class="title">EATECH.AI</div>
             </div>
-            <div class="robot-header" onclick="const btn = document.querySelector('button[key=mascot_click_btn]'); if(btn) btn.click();">
+            <div class="robot-header" onclick="Array.from(window.parent.document.querySelectorAll('button')).find(el => el.innerText.includes('Interactive Assistant'))?.click();">
                 <img src="data:image/png;base64,{img_base64}" alt="AI Assistant">
             </div>
         </div>

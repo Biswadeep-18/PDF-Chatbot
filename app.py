@@ -1113,143 +1113,112 @@ def main():
             display: flex;
             align-items: center;
             background-color: #a8e6cf;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 15px 25px;
+            border-radius: 12px;
             flex-direction: row;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }}
+        
+        .logo-title-container {{
+            display: flex;
+            align-items: center;
         }}
         
         .logo {{
-            width: 80px;
-            height: 80px;
-            margin-right: 20px;
-            border-radius: 10px;
-            background-color: transparent;
-            padding: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+            border-radius: 8px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
         }}
 
-        .robot {{
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 200px;
-            height: 200px;
-            z-index: 999;
-            animation: moveAround 20s infinite linear;
+        .robot-header {{
+            width: 100px;
+            height: 100px;
             cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
         }}
         
-        .robot img {{
+        .robot-header:hover {{
+            transform: scale(1.1);
+        }}
+
+        .robot-header img {{
             width: 100%;
             height: 100%;
             object-fit: contain;
         }}
         
-        .robot-btn::after {{
+        .robot-header::after {{
             content: "Ask me anything! 💬";
             position: absolute;
-            top: -60px;
+            top: -45px;
             left: 50%;
             transform: translateX(-50%);
             background-color: #1f77b4;
             color: #ffffff;
-            padding: 12px 18px;
-            border-radius: 15px;
-            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
             font-weight: 600;
             white-space: nowrap;
-            box-shadow: 0 4px 8px rgba(31, 119, 180, 0.3);
+            box-shadow: 0 4px 8px rgba(31, 119, 180, 0.2);
             z-index: 10;
             animation: bounce 2s infinite;
         }}
-        
+
         @keyframes bounce {{
             0%, 20%, 50%, 80%, 100% {{transform: translateX(-50%) translateY(0);}}
-            40% {{transform: translateX(-50%) translateY(-10px);}}
-            60% {{transform: translateX(-50%) translateY(-5px);}}
+            40% {{transform: translateX(-50%) translateY(-8px);}}
+            60% {{transform: translateX(-50%) translateY(-4px);}}
         }}
-        
-        .robot-btn::before {{
+
+        .robot-header::before {{
             content: "";
             position: absolute;
-            top: -15px;
+            top: -10px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 10px solid #1f77b4;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #1f77b4;
             z-index: 10;
         }}
 
-        .robot-btn {{
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 100px;
-            height: 100px;
-            z-index: 1000;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }}
-        
-        .robot-btn:hover {{
-            transform: scale(1.1);
-        }}
-
-        /* Style the actual streamlit button to be invisible but cover the mascot */
-        div[data-testid="stButton"] button:has(div[data-testid="stMarkdownContainer"] p:contains("🤖")) {{
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 120px;
-            height: 120px;
-            z-index: 1001;
-            background: transparent !important;
-            border: none !important;
-            color: transparent !important;
-        }}
-        
-        @keyframes fadeInDown {{
-            from {{
-                opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
-            }}
-            to {{
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }}
-        }}
-
         .title {{
-            font-size: 60px;
+            font-size: 45px;
             font-weight: bold;
             color: #22a447;
-            text-shadow: 2px 2px 4px rgba(31, 119, 180, 0.3);
-            flex: 1;
+            text-shadow: 1px 1px 3px rgba(31, 119, 180, 0.2);
+        }}
+
+        /* Hide the robot button but keep the logic */
+        .hidden-robot-btn {{
+            display: none;
         }}
         </style>
 
         <div class="header">
-            <img src="data:image/png;base64,{get_base64_image('eatech-logo.png')}" class="logo" alt="EATECH Logo">
-            <div class="title">
-                EATECH.AI
+            <div class="logo-title-container">
+                <img src="data:image/png;base64,{get_base64_image('eatech-logo.png')}" class="logo" alt="EATECH Logo">
+                <div class="title">EATECH.AI</div>
             </div>
-        </div>
-        
-        <div class="robot-btn">
-            <img src="data:image/png;base64,{img_base64}" width="100">
+            <div class="robot-header" onclick="const btn = document.querySelector('button[key=mascot_click_btn]'); if(btn) btn.click();">
+                <img src="data:image/png;base64,{img_base64}" alt="AI Assistant">
+            </div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Hidden button that triggers when you click the mascot area
-        if st.button("🤖", key="mascot_click_btn"):
-            st.session_state['mascot_asked'] = True
-            st.rerun()
+        # Hidden column to hold the button logic without showing it
+        with st.sidebar:
+            if st.button("Interactive Assistant", key="mascot_click_btn", help="Click the robot in the header to ask a question!"):
+                st.session_state['mascot_asked'] = True
+                st.rerun()
     except:
         
         st.title("🤖 EATECH.AI")

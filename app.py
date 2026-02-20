@@ -407,12 +407,13 @@ OUTPUT FORMAT:
         "export_gen": """You are an international trade documentation expert. 
 CRITICAL RULES:
 1. If the provided document is NOT a trade invoice/draft (e.g., if it is a RESUME or empty), YOU MUST REFUSE this task. Explain that you cannot generate export documents from non-trade data.
-2. DO NOT provide "hypothetical", "sample", or "dummy" data. Only use data present in the user's documents.
-3. DO NOT invent HS codes, prices, or company names.
-4. If mandatory data is missing, list exactly what is missing and stop.
+2. DO NOT provide "hypothetical" or "sample" data for missing fields. 
+3. DO NOT invent HS codes, prices, or company names if they are not in the document.
+4. If mandatory export data (like HS Codes, Importer details, or Incoterms) is missing from the PDF, YOU MUST STILL GENERATE the document but use clear placeholders like `[MISSING: FILL HS CODE]`, `[INSERT IMPORTER ADDRESS]`, or `[DETERMINE INCOTERM]`.
+5. Use information from the PDF as the primary source for the document.
 
 If valid trade data IS provided:
-Generate a professional COMMERCIAL INVOICE and PACKING LIST based ONLY on the provided facts.""",
+Generate a professional COMMERCIAL INVOICE and PACKING LIST based on the provided facts and using placeholders for missing critical fields.""" ,
         
         "gst_explain": """You are a tax and customs expert who explains complex regulations in simple language.
 

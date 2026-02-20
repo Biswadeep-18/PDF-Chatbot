@@ -227,103 +227,40 @@ def get_relevant_context(vectorstore, query: str, k: int = 5) -> tuple:
 def extract_to_json(client: Groq, pdf_text: str, filename: str) -> Dict:
     """Extract structured data from PDF and convert to JSON format using AI"""
     
-    system_prompt = """You are an expert data extraction specialist. Extract ALL information from the provided document and structure it into a clean, comprehensive JSON format.
+    system_prompt = """You are an expert data extraction specialist. Your task is to extract information from the provided document and structure it into a clean, comprehensive JSON format.
 
-TASK: Extract and structure ALL data from the document
+First, determine the DOCUMENT TYPE (Invoice, Resume, Letter, Packing List, etc.) and adapt your extraction accordingly.
 
-For INVOICES, extract:
+### For INVOICES/TRADE DOCS:
 {
   "document_type": "invoice",
-  "invoice_details": {
-    "invoice_number": "",
-    "invoice_date": "",
-    "po_number": "",
-    "reference_number": ""
-  },
-  "exporter": {
-    "name": "",
-    "address": "",
-    "city": "",
-    "state": "",
-    "country": "",
-    "postal_code": "",
-    "tax_id": "",
-    "gstin": "",
-    "email": "",
-    "phone": ""
-  },
-  "importer": {
-    "name": "",
-    "address": "",
-    "city": "",
-    "state": "",
-    "country": "",
-    "postal_code": "",
-    "tax_id": "",
-    "email": "",
-    "phone": ""
-  },
-  "shipping_details": {
-    "ship_to_address": "",
-    "shipping_method": "",
-    "incoterms": "",
-    "port_of_loading": "",
-    "port_of_discharge": "",
-    "country_of_origin": ""
-  },
-  "items": [
-    {
-      "sno": 1,
-      "description": "",
-      "hs_code": "",
-      "quantity": 0,
-      "unit": "",
-      "unit_price": 0,
-      "total_price": 0,
-      "tax_rate": 0,
-      "tax_amount": 0
-    }
-  ],
-  "financial_summary": {
-    "subtotal": 0,
-    "tax_amount": 0,
-    "shipping_charges": 0,
-    "discount": 0,
-    "grand_total": 0,
-    "currency": ""
-  },
-  "payment_terms": {
-    "terms": "",
-    "due_date": "",
-    "bank_details": {
-      "bank_name": "",
-      "account_number": "",
-      "ifsc_code": "",
-      "swift_code": "",
-      "iban": ""
-    }
-  },
-  "additional_info": {
-    "notes": "",
-    "terms_and_conditions": "",
-    "authorized_signatory": ""
-  }
+  "invoice_details": {"invoice_number": "", "invoice_date": "", "po_number": ""},
+  "parties": {"exporter": {"name": "", "address": ""}, "importer": {"name": "", "address": ""}},
+  "items": [{"description": "", "hs_code": "", "quantity": 0, "total_price": 0}],
+  "financials": {"grand_total": 0, "currency": ""}
 }
 
-For OTHER DOCUMENTS (Packing List, Bill of Lading, etc.), adapt the structure accordingly.
+### For RESUMES:
+{
+  "document_type": "resume",
+  "personal_info": {"name": "", "email": "", "phone": "", "linkedin": "", "location": ""},
+  "summary": "",
+  "experience": [{"job_title": "", "company": "", "duration": "", "responsibilities": []}],
+  "education": [{"degree": "", "institution": "", "year": ""}],
+  "skills": {"technical": [], "soft_skills": []},
+  "projects": []
+}
+
+### For OTHER DOCUMENTS:
+Create a logical JSON structure that captures all key information (Subject, Dates, Sender, Receiver, Main Content, etc.).
 
 RULES:
-1. Extract ONLY information that is explicitly present in the document.
-2. CRITICAL: DO NOT guess, invent, or hallucinate HS codes, tax IDs, or any other data. 
-3. If a field (like HS Code) is not found in the text, use null or an empty string.
-4. Convert all numbers to appropriate numeric types.
-5. Maintain proper data types (strings, numbers, arrays, objects).
-6. Include ALL line items/products found.
-7. Extract dates in ISO format (YYYY-MM-DD) when possible.
-8. Return ONLY valid JSON, no additional text or explanation.
-9. Be thorough - extract even small details, but ONLY if they are there.
-
-Return the complete JSON structure."""
+1. Detect document type automatically based on content.
+2. Extract ONLY information explicitly present in the text.
+3. For HS codes, Tax IDs, etc., DO NOT guess or hallucinate. Use null if not found.
+4. Extract dates in ISO format (YYYY-MM-DD) when possible.
+5. Return ONLY valid JSON.
+"""
 
     # Limit text size to ~25,000 characters (approx 8k-10k tokens) to stay within Groq limits
     max_chars = 25000
@@ -1553,7 +1490,7 @@ def main():
         
         
         # Handle JSON button click, other quick action buttons, or user question
-        if quick_action or (user_question and st.session_state['vectorstore']):
+        if quick_action or (user_question and (st.session_state['vectorstore'] or st.session_state.get('show_chat_manually'))):
             # Use quick_action as the question if it was just clicked
             final_query = quick_action if (quick_action and quick_action != "convert_to_json_button_clicked") else user_question
             
@@ -1674,11 +1611,14 @@ def main():
                     num_docs = len([k for k in st.session_state['pdf_texts'].keys() if "Knowledge Base" not in k])
                     k_value = min(15, (num_docs + 3) * 3)  
                     
-                    docs, context_by_source = get_relevant_context(
-                        st.session_state['vectorstore'],
-                        final_query,
-                        k=k_value
-                    )
+                    if st.session_state['vectorstore']:
+                        docs, context_by_source = get_relevant_context(
+                            st.session_state['vectorstore'],
+                            final_query,
+                            k=k_value
+                        )
+                    else:
+                        context_by_source = {}
                     
                     
                     response = generate_response(

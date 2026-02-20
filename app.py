@@ -354,7 +354,6 @@ def generate_response(client: Groq, query: str, context_by_source: Dict, task_ty
 - If information comes from a PDF, mention the source filename.
 - If information comes from a web search, label it as "Real-time updates".
 - Prioritize PDF information for document-specific questions, and web search for news or general facts.
-- CRITICAL: If the document is a resume, do not treat it as an invoice or ask for HS codes.
 - If information is not in the documents or web search, say so clearly.""",
         
         "email": """You are a professional email writer. Based on the document context provided:
@@ -386,34 +385,26 @@ def generate_response(client: Groq, query: str, context_by_source: Dict, task_ty
 - Clearly indicate which information came from which source
 - Create a well-structured, comprehensive merged document""",
         
-        "invoice_check": """You are an expert trade compliance auditor. 
-CRITICAL: If the document is NOT an invoice (e.g., if it is a Resume or a General Letter), YOU MUST REFUSE this task and explain that this tool is ONLY for trade document verification.
+        "invoice_check": """You are an expert trade compliance auditor. Analyze the provided invoice against international trade standards.
+Identify ALL errors, missing fields, and compliance issues.
 
-If it IS an invoice:
-Analyze the provided invoice against international trade standards (HS Codes, Tax IDs, Incoterms).
-Identify ALL errors, missing fields, and calculations issues.
-STRICT RULE: DO NOT guess or hallucinate any numbers or codes.
+Check for:
+1. MANDATORY FIELDS: HS Codes, Tax IDs, Incoterms
+2. CALCULATIONS: Verify math
+3. COMPLETENESS: Exporter/Importer details
 
 OUTPUT FORMAT:
 ## ✅ CORRECT ITEMS
 - List what's done correctly
 
-## ❌ CRITICAL ERRORS (Must Fix)
-- List all critical errors
+## ❌ CRITICAL ERRORS
+- List critical missing fields or errors
 
 ## 📋 MISSING INFORMATION
-- List all missing mandatory fields""",
+- List missing mandatory fields""",
         
-        "export_gen": """You are an international trade documentation expert. 
-CRITICAL RULES:
-1. If the provided document is NOT a trade invoice/draft (e.g., if it is a RESUME or empty), YOU MUST REFUSE this task. Explain that you cannot generate export documents from non-trade data.
-2. DO NOT provide "hypothetical" or "sample" data for missing fields. 
-3. DO NOT invent HS codes, prices, or company names if they are not in the document.
-4. If mandatory export data (like HS Codes, Importer details, or Incoterms) is missing from the PDF, YOU MUST STILL GENERATE the document but use clear placeholders like `[MISSING: FILL HS CODE]`, `[INSERT IMPORTER ADDRESS]`, or `[DETERMINE INCOTERM]`.
-5. Use information from the PDF as the primary source for the document.
-
-If valid trade data IS provided:
-Generate a professional COMMERCIAL INVOICE and PACKING LIST based on the provided facts and using placeholders for missing critical fields.""" ,
+        "export_gen": """You are an international trade documentation expert. Generate professional export documents (Commercial Invoice and Packing List) based on the provided PDF data. 
+Use the available information to fill in as much as possible. If information is missing, use your best professional judgment or leave a blank space for the user to fill.""",
         
         "gst_explain": """You are a tax and customs expert who explains complex regulations in simple language.
 

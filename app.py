@@ -417,7 +417,7 @@ def generate_response(client: Groq, query: str, context_by_source: Dict, task_ty
 - If information comes from a PDF, mention the source filename.
 - If information comes from a web search, label it as "Real-time updates".
 - Prioritize PDF information for document-specific questions, and web search for news or general facts.
-- If information is not in the documents or web search, say so clearly."""
+- If information is not in the documents or web search, say so clearly.""",
         
         "email": """You are a professional email writer. Based on the document context provided:
 - Write a clear, professional email

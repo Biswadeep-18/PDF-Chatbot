@@ -3,7 +3,7 @@ import streamlit as st
 from PyPDF2 import PdfReader, PdfWriter
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from groq import Groq
 import os
@@ -907,9 +907,46 @@ def main():
         color: #000000 !important;
     }
     
-    .stTextInput, .stTextArea, .stSelectbox, .stNumberInput {
-        background-color: #ffffff !important;
+    .stTextInput > label, .stSelectbox > label {
         color: #000000 !important;
+        font-weight: 900 !important;
+        font-size: 1.1rem !important;
+    }
+
+    .stTextInput div[data-baseweb="input"] {
+        background-color: #c5f0e8 !important; /* Matches Example Queries */
+        border-radius: 25px !important;
+        border: 2px solid #1f77b4 !important; /* Blue border */
+        padding: 5px 15px !important;
+    }
+
+    .stSelectbox div[data-baseweb="select"] {
+        background-color: #004d40 !important; /* Deep Green */
+        border-radius: 25px !important;
+        border: 2px solid #004d40 !important;
+        padding: 5px 15px !important;
+    }
+
+    .stTextInput input {
+        color: #000000 !important; /* Black text for light background */
+        font-weight: bold !important;
+        background-color: transparent !important;
+    }
+
+    .stSelectbox div[data-baseweb="select"] > div {
+        color: #ffffff !important;
+        font-weight: bold !important;
+        background-color: transparent !important;
+    }
+
+    /* Target placeholder */
+    .stTextInput input::placeholder {
+        color: #555555 !important;
+    }
+
+    /* Target selectbox arrow */
+    .stSelectbox svg {
+        fill: #ffffff !important;
     }
     
     /* Upload file area styling */
@@ -1042,12 +1079,13 @@ def main():
             width: 80px;
             height: 80px;
             margin-right: 20px;
-            border-radius: 15px;
-            background-color: #000000;
-            padding: 5px;
+            border-radius: 10px;
+            background-color: transparent;
+            padding: 2px;
             display: flex;
             align-items: center;
             justify-content: center;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }}
 
         .robot {{
@@ -1421,12 +1459,16 @@ def main():
         )
         
         
-        task_type = st.selectbox(
-            "Task Type (Auto-detect enabled)",
-            ["Auto-detect", "Convert to JSON", "Invoice Comparison", "Create New Invoice", "Invoice Error Check", "Generate Export Documents", "GST/Customs Explanation", 
-             "Document Checklist", "Risk Analysis", "Answer Question", "Email", "Summary", "Comparison"],
-            help="Select task type or let AI auto-detect from your query"
-        )
+        
+        # Wrap selectbox in columns to make it smaller
+        sel_col1, sel_col2, sel_col3 = st.columns([2, 2, 4])
+        with sel_col1:
+            task_type = st.selectbox(
+                "Task Type (Auto-detect enabled)",
+                ["Auto-detect", "Convert to JSON", "Invoice Comparison", "Create New Invoice", "Invoice Error Check", "Generate Export Documents", "GST/Customs Explanation", 
+                 "Document Checklist", "Risk Analysis", "Answer Question", "Email", "Summary", "Comparison"],
+                help="Select task type or let AI auto-detect from your query"
+            )
         
         
         with st.expander("💡 Example Queries"):

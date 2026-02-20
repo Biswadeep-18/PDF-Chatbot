@@ -876,6 +876,7 @@ def main():
     # Detect mascot click from URL parameters
     if st.query_params.get("mascot_click") == "true":
         st.session_state['mascot_asked'] = True
+        st.session_state['show_chat_manually'] = True
         # Clear the parameter to avoid loop
         st.query_params.clear()
         st.rerun()
@@ -1239,6 +1240,8 @@ def main():
         st.session_state['quick_scan_results'] = None
     if 'extracted_json_data' not in st.session_state:
         st.session_state['extracted_json_data'] = {}
+    if 'show_chat_manually' not in st.session_state:
+        st.session_state['show_chat_manually'] = False
     
     
     api_key = os.getenv("GROQ_API_KEY")
@@ -1322,6 +1325,7 @@ def main():
                 st.session_state['uploaded_files_list'] = []
                 st.session_state['quick_scan_results'] = None
                 st.session_state['extracted_json_data'] = {}
+                st.session_state['show_chat_manually'] = False
                 st.rerun()
     
     st.markdown("---")
@@ -1373,7 +1377,7 @@ def main():
         st.markdown("---")
     
     
-    if not st.session_state['pdf_texts']:
+    if not st.session_state['pdf_texts'] and not st.session_state.get('show_chat_manually'):
         st.info("👈 Upload your export documents (invoices, packing lists, etc.) to get started!")
         
         
@@ -1425,6 +1429,8 @@ def main():
             <p>Just ask AI "convert this to JSON" → Get all data extracted in clean, structured JSON format!</p>
             </div>
             """, unsafe_allow_html=True)
+        
+        st.info("💡 **Tip:** Upload documents to unlock more expert features like Error Detection and Document Generation!")
         
     else:
         

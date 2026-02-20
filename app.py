@@ -873,6 +873,13 @@ def main():
         layout="wide"
     )
     
+    # Detect mascot click from URL parameters
+    if st.query_params.get("mascot_click") == "true":
+        st.session_state['mascot_asked'] = True
+        # Clear the parameter to avoid loop
+        st.query_params.clear()
+        st.rerun()
+    
     
     st.markdown("""
     <style>
@@ -1208,17 +1215,12 @@ def main():
                 <img src="data:image/png;base64,{get_base64_image('eatech-logo.png')}" class="logo" alt="EATECH Logo">
                 <div class="title">EATECH.AI</div>
             </div>
-            <div class="robot-header" onclick="Array.from(window.parent.document.querySelectorAll('button')).find(el => el.innerText.includes('Interactive Assistant'))?.click();">
+            <a href="/?mascot_click=true" target="_self" class="robot-header">
                 <img src="data:image/png;base64,{img_base64}" alt="AI Assistant">
-            </div>
+            </a>
         </div>
         """, unsafe_allow_html=True)
         
-        # Hidden column to hold the button logic without showing it
-        with st.sidebar:
-            if st.button("Interactive Assistant", key="mascot_click_btn", help="Click the robot in the header to ask a question!"):
-                st.session_state['mascot_asked'] = True
-                st.rerun()
     except:
         
         st.title("🤖 EATECH.AI")

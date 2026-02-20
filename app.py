@@ -14,6 +14,8 @@ from datetime import datetime, timedelta
 import re
 import base64
 import pandas as pd
+from duckduckgo_search import DDGS
+import time
 
 
 
@@ -397,12 +399,25 @@ def generate_response(client: Groq, query: str, context_by_source: Dict, task_ty
     
     full_context = "\n".join(context_parts)
     
+    # Real-time search integration
+    search_context = ""
+    is_real_time = any(word in query.lower() for word in ["news", "real time", "today", "current", "latest", "what is happening", "search"])
+    
+    if is_real_time or (task_type == "answer" and not context_parts):
+        with st.status("🌐 Searching the web for real-time information...", expanded=False):
+            search_context = web_search(query)
+            st.write("Found real-time information!")
+    
+    if search_context:
+        full_context = f"{full_context}\n\n### REAL-TIME WEB SEARCH RESULTS:\n{search_context}"
+    
     system_prompts = {
-        "answer": """You are a helpful assistant that answers questions based on provided PDF documents. 
-- Give direct, accurate answers using information from the context
-- When information comes from multiple PDFs, mention the sources
-- If comparing PDFs, clearly highlight similarities and differences
-- If information is not in the documents, say so clearly""",
+        "answer": """You are a helpful assistant that answers questions based on provided PDF documents AND real-time web search results.
+- Give direct, accurate answers using information from BOTH the PDF context and search results.
+- If information comes from a PDF, mention the source filename.
+- If information comes from a web search, label it as "Real-time updates".
+- Prioritize PDF information for document-specific questions, and web search for news or general facts.
+- If information is not in the documents or web search, say so clearly."""
         
         "email": """You are a professional email writer. Based on the document context provided:
 - Write a clear, professional email
@@ -786,6 +801,22 @@ def detect_task_type(query: str) -> str:
 
 
 
+def web_search(query: str, max_results: int = 5) -> str:
+    """Perform a web search for real-time information"""
+    try:
+        results = []
+        with DDGS() as ddgs:
+            for r in ddgs.text(query, max_results=max_results):
+                results.append(f"Title: {r['title']}\nSnippet: {r['body']}\nSource: {r['href']}\n")
+        
+        if not results:
+            return "No real-time search results found."
+        
+        return "\n\n".join(results)
+    except Exception as e:
+        return f"Web search failed: {str(e)}"
+
+
 def get_company_info() -> Dict:
     """Get EATECH company details"""
     return EATECH_INFO
@@ -1131,7 +1162,13 @@ def main():
             white-space: nowrap;
             box-shadow: 0 4px 8px rgba(31, 119, 180, 0.3);
             z-index: 10;
-            animation: fadeInDown 0.5s ease-in;
+            animation: bounce 2s infinite;
+        }}
+        
+        @keyframes bounce {{
+            0%, 20%, 50%, 80%, 100% {{transform: translateX(-50%) translateY(0);}}
+            40% {{transform: translateX(-50%) translateY(-10px);}}
+            60% {{transform: translateX(-50%) translateY(-5px);}}
         }}
         
         .robot::before {{

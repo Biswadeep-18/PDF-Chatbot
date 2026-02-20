@@ -15,4 +15,5 @@ dependencies = [
     "sentence-transformers>=5.2.2",
     "streamlit>=1.54.0",
     "pandas",
+    "duckduckgo-search"
 ]

@@ -384,57 +384,33 @@ def generate_response(client: Groq, query: str, context_by_source: Dict, task_ty
 - Clearly indicate which information came from which source
 - Create a well-structured, comprehensive merged document""",
         
-        "invoice_check": """You are an expert trade compliance auditor. Analyze the provided invoice against international trade standards.
+        "invoice_check": """You are an expert trade compliance auditor. 
+CRITICAL: If the document is NOT an invoice (e.g., if it is a Resume or a General Letter), YOU MUST REFUSE this task and explain that this tool is ONLY for trade document verification.
 
-TASK: Identify ALL errors, missing fields, and compliance issues
-
-Check for:
-1. MANDATORY FIELDS: HS Codes, Tax IDs (GSTIN), Incoterms, detailed descriptions, country of origin
-2. CALCULATIONS: Verify quantity × unit price = total for each line item
-3. COMPLETENESS: All required exporter/importer details present
-4. CLARITY: Descriptions are specific (not vague like "goods" or "items")
-5. COMPLIANCE: Currency specified, bank details present, authorized signature mentioned
+If it IS an invoice:
+Analyze the provided invoice against international trade standards (HS Codes, Tax IDs, Incoterms).
+Identify ALL errors, missing fields, and calculations issues.
+STRICT RULE: DO NOT guess or hallucinate any numbers or codes.
 
 OUTPUT FORMAT:
 ## ✅ CORRECT ITEMS
 - List what's done correctly
 
 ## ❌ CRITICAL ERRORS (Must Fix)
-- List all critical missing fields or errors with specific line references
-
-## ⚠️ WARNINGS (Should Fix)
-- List items that need improvement
+- List all critical errors
 
 ## 📋 MISSING INFORMATION
-- List all missing mandatory fields
-
-## 💡 RECOMMENDATIONS
-- Provide specific actionable fixes
-
-Be thorough and specific. Reference actual line items from the invoice.""",
+- List all missing mandatory fields""",
         
-        "export_gen": """You are an international trade documentation expert. Generate professional export documents.
+        "export_gen": """You are an international trade documentation expert. 
+CRITICAL RULES:
+1. If the provided document is NOT a trade invoice/draft (e.g., if it is a RESUME or empty), YOU MUST REFUSE this task. Explain that you cannot generate export documents from non-trade data.
+2. DO NOT provide "hypothetical", "sample", or "dummy" data. Only use data present in the user's documents.
+3. DO NOT invent HS codes, prices, or company names.
+4. If mandatory data is missing, list exactly what is missing and stop.
 
-Based on the provided invoice data, create:
-
-1. COMMERCIAL INVOICE
-   - Formal header with exporter details
-   - Complete importer details
-   - Itemized product table with HS codes
-   - All calculated totals
-   - Payment terms and banking details
-   - Declaration and signature block
-
-2. PACKING LIST
-   - Shipment details (date, reference number)
-   - Complete packaging breakdown
-   - Net and gross weights
-   - Dimensions if available
-   - Marks and numbers
-   - Total packages count
-
-Use professional formatting with clear sections, tables, and standard trade terminology.
-Ensure both documents are complete, accurate, and ready for customs clearance.""",
+If valid trade data IS provided:
+Generate a professional COMMERCIAL INVOICE and PACKING LIST based ONLY on the provided facts.""",
         
         "gst_explain": """You are a tax and customs expert who explains complex regulations in simple language.
 
@@ -711,13 +687,13 @@ def detect_task_type(query: str) -> str:
     if any(word in query_lower for word in ["convert to json", "convert this to json", "extract to json", "to json", "json format", "give me json", "as json", "in json", "convert pdf to json", "extract json", "make json"]):
         return "convert_to_json"
     # Invoice comparison detection
-    elif any(word in query_lower for word in ["compare invoice", "invoice comparison", "difference between invoice", "missing product", "missing items", "compare two invoice"]):
+    elif any(word in query_lower for word in ["compare invoice", "invoice comparison", "difference between invoice", "compare two invoice"]) or ("compare" in query_lower and "invoice" in query_lower):
         return "invoice_compare"
-    elif any(word in query_lower for word in ["create invoice", "generate invoice", "make invoice", "new invoice", "invoice from"]):
+    elif any(word in query_lower for word in ["create invoice", "generate invoice", "make invoice", "new invoice"]) or ("create" in query_lower and "invoice" in query_lower):
         return "create_invoice"
-    elif any(word in query_lower for word in ["check error", "invoice error", "audit invoice", "check invoice", "verify invoice", "find errors"]):
+    elif any(word in query_lower for word in ["check error", "invoice error", "audit invoice", "verify invoice", "find errors"]) or ("check" in query_lower and "invoice" in query_lower):
         return "invoice_check"
-    elif any(word in query_lower for word in ["generate export", "create export", "export document", "packing list", "commercial invoice"]):
+    elif (any(word in query_lower for word in ["generate export", "create export", "export document", "packing list", "commercial invoice"])) and ("generate" in query_lower or "create" in query_lower or "make" in query_lower):
         return "export_gen"
     elif any(word in query_lower for word in ["explain gst", "what is gst", "customs duty", "explain customs", "what is customs", "incoterms", "explain tax"]):
         return "gst_explain"

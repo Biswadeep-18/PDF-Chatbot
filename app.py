@@ -681,13 +681,13 @@ def detect_task_type(query: str) -> str:
     if any(word in query_lower for word in ["convert to json", "convert this to json", "extract to json", "to json", "json format", "give me json", "as json", "in json", "convert pdf to json", "extract json", "make json"]):
         return "convert_to_json"
     # Invoice comparison detection
-    elif any(word in query_lower for word in ["compare invoice", "invoice comparison", "difference between invoice", "compare two invoice"]) or ("compare" in query_lower and "invoice" in query_lower):
+    elif any(word in query_lower for word in ["compare invoice", "invoice comparison", "difference between invoice", "missing product", "missing items", "compare two invoice"]):
         return "invoice_compare"
-    elif any(word in query_lower for word in ["create invoice", "generate invoice", "make invoice", "new invoice"]) or ("create" in query_lower and "invoice" in query_lower):
+    elif any(word in query_lower for word in ["create invoice", "generate invoice", "make invoice", "new invoice", "invoice from"]):
         return "create_invoice"
-    elif any(word in query_lower for word in ["check error", "invoice error", "audit invoice", "verify invoice", "find errors"]) or ("check" in query_lower and "invoice" in query_lower):
+    elif any(word in query_lower for word in ["check error", "invoice error", "audit invoice", "check invoice", "verify invoice", "find errors"]):
         return "invoice_check"
-    elif (any(word in query_lower for word in ["generate export", "create export", "export document", "packing list", "commercial invoice"])) and ("generate" in query_lower or "create" in query_lower or "make" in query_lower):
+    elif any(word in query_lower for word in ["generate export", "create export", "export document", "packing list", "commercial invoice"]):
         return "export_gen"
     elif any(word in query_lower for word in ["explain gst", "what is gst", "customs duty", "explain customs", "what is customs", "incoterms", "explain tax"]):
         return "gst_explain"

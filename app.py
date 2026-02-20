@@ -354,19 +354,21 @@ def generate_response(client: Groq, query: str, context_by_source: Dict, task_ty
 - If information comes from a PDF, mention the source filename.
 - If information comes from a web search, label it as "Real-time updates".
 - Prioritize PDF information for document-specific questions, and web search for news or general facts.
+- CRITICAL: If the document is a resume, do not treat it as an invoice or ask for HS codes.
 - If information is not in the documents or web search, say so clearly.""",
         
         "email": """You are a professional email writer. Based on the document context provided:
-- Write a clear, professional email
-- Use appropriate email format (Subject, Greeting, Body, Closing)
-- Incorporate relevant information from the documents
-- Keep it concise and well-structured""",
+- Write a clear, professional email.
+- Use appropriate email format (Subject, Greeting, Body, Closing).
+- If the document is a resume, help the user draft a cover letter or application email.
+- Incorporate relevant information from the documents.
+- Keep it concise and well-structured.""",
         
         "summary": """You are an expert at summarizing documents. 
-- Create a comprehensive summary of the key points
-- If multiple documents are provided, organize by source or theme
-- Highlight important findings, data, or conclusions
-- Be concise but thorough""",
+- Create a comprehensive summary of the key points.
+- Automatically detect the document type (Resume, Invoice, Report, etc.) and adapt the style.
+- Highlight important findings, professional skills, or data points.
+- Be concise but thorough.""",
         
         "comparison": """You are an expert at comparing and analyzing multiple documents.
 - Compare ALL uploaded documents systematically

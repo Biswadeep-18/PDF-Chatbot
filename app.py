@@ -1380,7 +1380,7 @@ def main():
         
         # Mascot trigger logic
         if st.session_state.get('mascot_asked'):
-            quick_action = "I want to ask you a question! Can you help me with something general or real-time news?"
+            quick_action = "write your questions"
             st.session_state['mascot_asked'] = False # Reset
             
         with col1:

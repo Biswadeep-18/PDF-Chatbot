@@ -6,7 +6,7 @@ textColor = "#000000"
 font = "sans serif"
 
 [client]
-showErrorDetails = false
+showErrorDetails = true
 
 [logger]
 level = "info"

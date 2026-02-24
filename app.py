@@ -325,7 +325,7 @@ Extract ALL data from this document and provide it in the appropriate JSON struc
         }
 
 
-def generate_response(client: Groq, query: str, context_by_source: Dict, task_type: str = "answer"):
+def generate_response(client: Groq, query: str, context_by_source: Dict, task_type: str = "answer", language: str = "English"):
     """Generate response using Groq API"""
     
     context_parts = []
@@ -349,43 +349,49 @@ def generate_response(client: Groq, query: str, context_by_source: Dict, task_ty
         full_context = f"{full_context}\n\n### REAL-TIME WEB SEARCH RESULTS:\n{search_context}"
     
     system_prompts = {
-        "answer": """You are a helpful assistant that answers questions based on provided PDF documents AND real-time web search results.
+        "answer": f"""You are a helpful assistant that answers questions based on provided PDF documents AND real-time web search results.
 - Give direct, accurate answers using information from BOTH the PDF context and search results.
 - If information comes from a PDF, mention the source filename.
 - If information comes from a web search, label it as "Real-time updates".
 - Prioritize PDF information for document-specific questions, and web search for news or general facts.
-- If information is not in the documents or web search, say so clearly.""",
+- If information is not in the documents or web search, say so clearly.
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "email": """You are a professional email writer. Based on the document context provided:
+        "email": f"""You are a professional email writer. Based on the document context provided:
 - Write a clear, professional email.
 - Use appropriate email format (Subject, Greeting, Body, Closing).
 - If the document is a resume, help the user draft a cover letter or application email.
 - Incorporate relevant information from the documents.
-- Keep it concise and well-structured.""",
+- Keep it concise and well-structured.
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "summary": """You are an expert at summarizing documents. 
+        "summary": f"""You are an expert at summarizing documents. 
 - Create a comprehensive summary of the key points.
 - Automatically detect the document type (Resume, Invoice, Report, etc.) and adapt the style.
 - Highlight important findings, professional skills, or data points.
-- Be concise but thorough.""",
+- Be concise but thorough.
+- ONLY include information found in the documents. DO NOT hallucinate.
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "comparison": """You are an expert at comparing and analyzing multiple documents.
+        "comparison": f"""You are an expert at comparing and analyzing multiple documents.
 - Compare ALL uploaded documents systematically
 - Identify key similarities and differences between each document
 - Organize your comparison in a clear structure with sections for each document
 - Highlight unique points from each document
 - Provide insights on the overall comparison across all documents
-- Create a comprehensive comparison table if helpful""",
+- Create a comprehensive comparison table if helpful
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "merge": """You are an expert at merging multiple documents into one cohesive document.
+        "merge": f"""You are an expert at merging multiple documents into one cohesive document.
 - Combine information from ALL uploaded PDFs
 - Organize the merged content logically by topics or themes
 - Remove duplicate information
 - Maintain all important details from each source
 - Clearly indicate which information came from which source
-- Create a well-structured, comprehensive merged document""",
+- Create a well-structured, comprehensive merged document
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "invoice_check": """You are an expert trade compliance auditor. Analyze the provided invoice against international trade standards.
+        "invoice_check": f"""You are an expert trade compliance auditor. Analyze the provided invoice against international trade standards.
 Identify ALL errors, missing fields, and compliance issues.
 
 Check for:
@@ -401,12 +407,14 @@ OUTPUT FORMAT:
 - List critical missing fields or errors
 
 ## 📋 MISSING INFORMATION
-- List missing mandatory fields""",
+- List missing mandatory fields
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "export_gen": """You are an international trade documentation expert. Generate professional export documents (Commercial Invoice and Packing List) based on the provided PDF data. 
-Use the available information to fill in as much as possible. If information is missing, use your best professional judgment or leave a blank space for the user to fill.""",
+        "export_gen": f"""You are an international trade documentation expert. Generate professional export documents (Commercial Invoice and Packing List) based on the provided PDF data. 
+Use the available information to fill in as much as possible. If information is missing, use your best professional judgment or leave a blank space for the user to fill.
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "gst_explain": """You are a tax and customs expert who explains complex regulations in simple language.
+        "gst_explain": f"""You are a tax and customs expert who explains complex regulations in simple language.
 
 TASK: Explain GST and customs concepts in easy-to-understand terms
 
@@ -417,9 +425,10 @@ TASK: Explain GST and customs concepts in easy-to-understand terms
 - Use emojis to make it more readable
 - Provide practical tips
 
-Make it feel like you're explaining to a friend, not reading a textbook.""",
+Make it feel like you're explaining to a friend, not reading a textbook.
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "checklist_gen": """You are a trade compliance expert. Generate a comprehensive document checklist.
+        "checklist_gen": f"""You are a trade compliance expert. Generate a comprehensive document checklist.
 
 Based on the context provided, create a complete checklist of:
 
@@ -437,9 +446,10 @@ Based on the context provided, create a complete checklist of:
    - Common mistakes to avoid
    - Timeline recommendations
 
-Format as an actionable checklist with checkboxes (☐) that users can follow.""",
+Format as an actionable checklist with checkboxes (☐) that users can follow.
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "risk_warning": """You are a trade compliance risk analyst. Analyze the provided documents for compliance risks.
+        "risk_warning": f"""You are a trade compliance risk analyst. Analyze the provided documents for compliance risks.
 
 TASK: Identify and explain compliance risks in the transaction
 
@@ -454,58 +464,35 @@ For each risk:
 - Explain CONSEQUENCES if not fixed
 - Provide SPECIFIC ACTIONS to mitigate
 
-Prioritize by severity and provide realistic timelines for resolution.""",
+Prioritize by severity and provide realistic timelines for resolution.
+- IMPORTANT: Provide your entire response in {language}.""",
         
-        "invoice_compare": """You are an expert invoice comparison analyst. Compare multiple invoices and extract detailed product information.
+        "invoice_compare": f"""You are an expert invoice comparison analyst. Your ONLY job is to compare ALL uploaded invoices/PDFs and produce a STRICT UNIFIED comparison.
 
-TASK: Create a comprehensive comparison of products across ALL invoices
+TASK: Create a SINGLE master table showing ALL products from ALL invoices. Clearly mark availability with ✅ or ❌.
 
-For each invoice, extract:
-1. Invoice metadata (number, date, party details)
-2. ALL products with their:
-   - Product Name/Description
-   - HS Code (if available)
-   - Quantity
-   - Unit of Measurement
-   - Unit Price
-   - Total Amount
-   - Any other relevant details
+STRICT RULES:
+1. ONLY show data that is EXPLICITLY available in the PDFs.
+2. If a data point is not in the PDF, DO NOT show it.
+3. Use a SINGLE table to show product availability across all documents.
+4. For each document, add a column (e.g., "In Invoice 1", "In Invoice 2").
+5. Use ✅ if the product exists in that document, and ❌ if it does not.
 
-OUTPUT FORMAT:
+STRICT OUTPUT FORMAT:
 
-## 📊 INVOICE SUMMARY TABLE
-Create a markdown table comparing basic invoice details (invoice numbers, dates, parties, totals)
+## 📊 MASTER PRODUCT COMPARISON
+| # | Product Name | Qty | Price | Total | [Doc 1 Name] | [Doc 2 Name] | ... |
+|---|-------------|-----|-------|-------|--------------|--------------|-----|
+| 1 | Product A   | 10  | 50.00 | 500.00| ✅            | ❌            | ... |
 
-## 🔍 DETAILED PRODUCT COMPARISON
-
-For EACH product found across all invoices, provide:
-- Product Name
-- Which invoice(s) it appears in
-- Quantity in each invoice
-- Price differences (if any)
-- Status: (Present in both/Missing from Invoice X)
-
-## ❌ MISSING PRODUCTS
-List products that appear in one invoice but NOT in others:
-- Product name
-- Missing from which invoice
-- Quantity and value in the invoice where it exists
-
-## 📈 QUANTITY & VALUE ANALYSIS
-- Total items in each invoice
-- Total value comparison
-- Quantity differences for common products
-- Price variance analysis
-
-## 💡 KEY INSIGHTS & SUMMARY
-- Main differences between invoices
-- Products unique to each invoice
-- Pricing discrepancies
-- Recommendations
-
-Be extremely thorough and extract ALL product details from the context provided.""",
+## 💡 SUMMARY
+- Total unique products found: [Count]
+- Products common to all: [Count]
+- Products missing in at least one: [Count]
+- IMPORTANT: Provide your entire response in {language}.
+""",
         
-        "create_invoice": """You are an expert invoice generator. Create a professional, complete commercial invoice.
+        "create_invoice": f"""You are an expert invoice generator. Create a professional, complete commercial invoice.
 
 TASK: Generate a ready-to-use commercial invoice in proper format
 
@@ -540,111 +527,26 @@ Based on the provided data, create a professional invoice with:
    - Company seal position
 
 Use professional formatting with clear sections and proper alignment.
-Make it print-ready and customs-compliant.""",
+Make it print-ready and customs-compliant.
+- IMPORTANT: Provide your entire response in {language}.""",
         
         "convert_to_json": """You are an expert data extraction specialist. Extract ALL information from the provided document and convert it into a clean, comprehensive JSON format.
 
-TASK: Extract and structure ALL data from the document into proper JSON
-
-For INVOICES, extract and return in this JSON structure:
-{
-  "document_type": "invoice",
-  "invoice_details": {
-    "invoice_number": "",
-    "invoice_date": "",
-    "po_number": "",
-    "reference_number": ""
-  },
-  "exporter": {
-    "name": "",
-    "address": "",
-    "city": "",
-    "state": "",
-    "country": "",
-    "postal_code": "",
-    "tax_id": "",
-    "gstin": "",
-    "email": "",
-    "phone": ""
-  },
-  "importer": {
-    "name": "",
-    "address": "",
-    "city": "",
-    "state": "",
-    "country": "",
-    "postal_code": "",
-    "tax_id": "",
-    "email": "",
-    "phone": ""
-  },
-  "shipping_details": {
-    "ship_to_address": "",
-    "shipping_method": "",
-    "incoterms": "",
-    "port_of_loading": "",
-    "port_of_discharge": "",
-    "country_of_origin": ""
-  },
-  "items": [
-    {
-      "sno": 1,
-      "description": "",
-      "hs_code": "",
-      "quantity": 0,
-      "unit": "",
-      "unit_price": 0,
-      "total_price": 0,
-      "tax_rate": 0,
-      "tax_amount": 0
-    }
-  ],
-  "financial_summary": {
-    "subtotal": 0,
-    "tax_amount": 0,
-    "shipping_charges": 0,
-    "discount": 0,
-    "grand_total": 0,
-    "currency": ""
-  },
-  "payment_terms": {
-    "terms": "",
-    "due_date": "",
-    "bank_details": {
-      "bank_name": "",
-      "account_number": "",
-      "ifsc_code": "",
-      "swift_code": "",
-      "iban": ""
-    }
-  },
-  "additional_info": {
-    "notes": "",
-    "terms_and_conditions": "",
-    "authorized_signatory": ""
-  },
-  "extraction_metadata": {
-    "source_filename": "",
-    "extraction_timestamp": "",
-    "extraction_method": "AI-powered"
-  }
-}
-
-For OTHER DOCUMENTS, adapt the structure accordingly.
-
 CRITICAL RULES:
 1. Extract ONLY information that is explicitly present in the document.
-2. STRICT FORBIDDEN: DO NOT guess, invent, or hallucinate HS codes, tax IDs, or any other data that is not in the text.
-3. Use null or empty string for missing fields. Do not try to fill them with guesses based on product names.
-4. Convert all numbers to appropriate numeric types (not strings).
-5. Maintain proper JSON data types (strings, numbers, arrays, objects).
-6. Include ALL line items/products found.
-7. Extract dates in ISO format (YYYY-MM-DD) when possible.
-8. Return ONLY valid JSON - no additional text, no explanations, no markdown.
-9. Be thorough - extract even small details, but ONLY if they are there.
-10. Ensure the JSON is properly formatted and can be parsed.
-
-Return ONLY the JSON structure, nothing else."""
+2. DO NOT guess, invent, or hallucinate any data.
+3. Return ONLY valid JSON - no additional text, no explanations, no markdown.
+4. If a field is missing, omit it or use null.
+""",
+        
+        "documentation": f"""You are a trade documentation expert. Your task is to generate a comprehensive "Documentation Report" based on the uploaded PDFs.
+- For Invoices: Generate a structured summary of the transaction, party details, and compliance status.
+- For Resumes: Generate a professional profile summary and skills analysis.
+- For Reports: Extract key findings and metrics.
+- Format the output with clear headings, tables, and bullet points.
+- ONLY include information present in the PDFs.
+- IMPORTANT: Provide your entire response in {language}.
+"""
     }
     
     system_prompt = system_prompts.get(task_type, system_prompts["answer"])
@@ -655,7 +557,7 @@ Return ONLY the JSON structure, nothing else."""
 
 User Request: {query}
 
-Please provide your response:"""
+Please provide your response in {language}:"""
     
     try:
         chat_completion = client.chat.completions.create(
@@ -674,35 +576,30 @@ Please provide your response:"""
 
 
 def detect_task_type(query: str) -> str:
-    """Detect what type of task the user is requesting"""
+    """Detect what type of task the user is requesting (Simplified to 4 main actions)"""
     query_lower = query.lower()
     
-    # JSON conversion detection - HIGHEST PRIORITY
-    if any(word in query_lower for word in ["convert to json", "convert this to json", "extract to json", "to json", "json format", "give me json", "as json", "in json", "convert pdf to json", "extract json", "make json"]):
+    # JSON Format
+    if any(word in query_lower for word in ["convert to json", "extract to json", "to json", "json format", "give me json", "as json", "in json"]):
         return "convert_to_json"
-    # Invoice comparison detection
-    elif any(word in query_lower for word in ["compare invoice", "invoice comparison", "difference between invoice", "missing product", "missing items", "compare two invoice"]):
+    
+    # Compare PDF
+    elif any(word in query_lower for word in [
+        "compare invoice", "invoice comparison", "difference between",
+        "missing product", "missing items", "compare two",
+        "compare pdf", "compare documents", "compare both",
+        "which product", "available and missing", "product comparison"
+    ]):
         return "invoice_compare"
-    elif any(word in query_lower for word in ["create invoice", "generate invoice", "make invoice", "new invoice", "invoice from"]):
-        return "create_invoice"
-    elif any(word in query_lower for word in ["check error", "invoice error", "audit invoice", "check invoice", "verify invoice", "find errors"]):
-        return "invoice_check"
-    elif any(word in query_lower for word in ["generate export", "create export", "export document", "packing list", "commercial invoice"]):
-        return "export_gen"
-    elif any(word in query_lower for word in ["explain gst", "what is gst", "customs duty", "explain customs", "what is customs", "incoterms", "explain tax"]):
-        return "gst_explain"
-    elif any(word in query_lower for word in ["checklist", "documents needed", "what documents", "required documents", "document list"]):
-        return "checklist_gen"
-    elif any(word in query_lower for word in ["risk", "compliance risk", "warning", "what can go wrong", "potential issues"]):
-        return "risk_warning"
-    elif any(word in query_lower for word in ["merge", "combine", "join", "merge pdfs", "combine pdfs"]):
-        return "merge"
-    elif any(word in query_lower for word in ["email", "write an email", "draft an email", "compose email"]):
-        return "email"
-    elif any(word in query_lower for word in ["summarize", "summary", "give me a summary"]):
+    
+    # Summary
+    elif any(word in query_lower for word in ["summarize", "summary", "give me a summary", "overview"]):
         return "summary"
-    elif any(word in query_lower for word in ["compare", "comparison", "difference", "similar", "contrast"]):
-        return "comparison"
+    
+    # Documentation
+    elif any(word in query_lower for word in ["documentation", "report", "document details", "party details", "compliance status"]):
+        return "documentation"
+    
     else:
         return "answer"
 
@@ -729,45 +626,6 @@ def get_company_info() -> Dict:
     return EATECH_INFO
 
 
-def quick_invoice_scan(invoice_text: str) -> Dict:
-    """Quick automated scan of invoice for common issues"""
-    issues = {
-        "critical": [],
-        "warnings": [],
-        "suggestions": []
-    }
-    
-    invoice_lower = invoice_text.lower()
-    
-    
-    if not re.search(r'\bhs\s*code\b|\bhscode\b|\bharmoni[sz]ed\b', invoice_lower):
-        issues["critical"].append("❌ Missing HS Code - Required for customs clearance")
-    
-    
-    if not re.search(r'\bgstin\b|\btax\s*id\b|\bein\b|\bpan\b', invoice_lower):
-        issues["critical"].append("❌ Missing Tax ID/GSTIN - Required for GST compliance")
-    
-    
-    if not re.search(r'\bfob\b|\bcif\b|\bdap\b|\bddp\b|\bexw\b|\bincoterm', invoice_lower):
-        issues["warnings"].append("⚠️ Incoterms not specified - May cause payment disputes")
-    
-    
-    if not re.search(r'country\s*of\s*origin|\borigin\b.*country', invoice_lower):
-        issues["warnings"].append("⚠️ Country of origin not mentioned")
-    
-    
-    if not re.search(r'\busd\b|\beur\b|\binr\b|\bgbp\b|\bcurrency\b', invoice_lower):
-        issues["warnings"].append("⚠️ Currency not clearly specified")
-    
-    
-    if re.search(r'\bgoods\b|\bitems\b|\bproducts\b(?!\s+\w+)', invoice_lower):
-        issues["suggestions"].append("💡 Product descriptions seem vague - Add more details")
-    
-    
-    if not re.search(r'\bbank\b|\bifsc\b|\bswift\b|\biban\b|\baccount\s*number\b', invoice_lower):
-        issues["suggestions"].append("💡 Bank details not found - Required for payment processing")
-    
-    return issues
 
 
 
@@ -869,8 +727,8 @@ def main():
     
     .stTextInput > label, .stSelectbox > label {
         color: #000000 !important;
-        font-weight: 900 !important;
-        font-size: 1.1rem !important;
+        font-weight: 700 !important;
+        font-size: 0.85rem !important;
     }
 
     .stTextInput div[data-baseweb="input"] {
@@ -881,10 +739,11 @@ def main():
     }
 
     .stSelectbox div[data-baseweb="select"] {
-        background-color: #004d40 !important; /* Deep Green */
-        border-radius: 25px !important;
-        border: 2px solid #004d40 !important;
-        padding: 5px 15px !important;
+        background-color: #e8f5e9 !important; /* Light Green */
+        border-radius: 15px !important;
+        border: 1px solid #2e7d32 !important; /* Slightly darker green border */
+        padding: 0px 10px !important;
+        height: 38px !important;
     }
 
     .stTextInput input {
@@ -894,8 +753,9 @@ def main():
     }
 
     .stSelectbox div[data-baseweb="select"] > div {
-        color: #ffffff !important;
-        font-weight: bold !important;
+        color: #2e7d32 !important; /* Dark Green text for light background */
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
         background-color: transparent !important;
     }
 
@@ -906,7 +766,7 @@ def main():
 
     /* Target selectbox arrow */
     .stSelectbox svg {
-        fill: #ffffff !important;
+        fill: #2e7d32 !important;
     }
     
     /* Upload file area styling */
@@ -1042,13 +902,13 @@ def main():
             align-items: center;
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(15px);
-            padding: 30px 40px;
-            border-radius: 24px;
+            padding: 15px 30px;
+            border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.4);
             flex-direction: row;
             justify-content: space-between;
-            margin-bottom: 40px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         }}
         
         .logo-title-container {{
@@ -1057,11 +917,11 @@ def main():
         }}
         
         .logo {{
-            width: 130px;
-            height: 130px;
-            margin-right: 30px;
-            border-radius: 20px;
-            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+            border-radius: 12px;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }}
 
@@ -1070,15 +930,15 @@ def main():
         }}
 
         .robot-header {{
-            width: 200px;
-            height: 200px;
+            width: 100px;
+            height: 100px;
             cursor: pointer;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
         }}
         
         .robot-header:hover {{
-            transform: scale(1.2) translateY(-10px);
+            transform: scale(1.1) translateY(-5px);
         }}
 
         .robot-header img {{
@@ -1090,49 +950,49 @@ def main():
         .robot-header::after {{
             content: "Ready to assist! 🗨️";
             position: absolute;
-            top: -75px;
+            top: -55px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(135deg, #1f77b4, #0d3a66);
             color: #ffffff;
-            padding: 14px 22px;
-            border-radius: 18px;
-            font-size: 18px;
+            padding: 10px 18px;
+            border-radius: 15px;
+            font-size: 14px;
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
             white-space: nowrap;
-            box-shadow: 0 12px 30px rgba(31, 119, 180, 0.4);
+            box-shadow: 0 8px 20px rgba(31, 119, 180, 0.3);
             z-index: 10;
             animation: bounce 2s infinite;
         }}
 
         @keyframes bounce {{
             0%, 20%, 50%, 80%, 100% {{transform: translateX(-50%) translateY(0);}}
-            40% {{transform: translateX(-50%) translateY(-15px);}}
-            60% {{transform: translateX(-50%) translateY(-8px);}}
+            40% {{transform: translateX(-50%) translateY(-10px);}}
+            60% {{transform: translateX(-50%) translateY(-5px);}}
         }}
 
         .robot-header::before {{
             content: "";
             position: absolute;
-            top: -25px;
+            top: -15px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 15px solid #1f77b4;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid #1f77b4;
             z-index: 10;
         }}
 
         .title {{
-            font-size: 85px;
+            font-size: 40px;
             font-family: 'Outfit', sans-serif;
             font-weight: 900;
             color: #1a8b3d;
-            letter-spacing: -4px;
-            text-shadow: 2px 2px 15px rgba(0, 0, 0, 0.05);
+            letter-spacing: -2px;
+            text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.05);
         }}
 
         /* Hide the robot button but keep the logic */
@@ -1166,8 +1026,6 @@ def main():
         st.session_state['chat_history'] = []
     if 'uploaded_files_list' not in st.session_state:
         st.session_state['uploaded_files_list'] = []
-    if 'quick_scan_results' not in st.session_state:
-        st.session_state['quick_scan_results'] = None
     if 'extracted_json_data' not in st.session_state:
         st.session_state['extracted_json_data'] = {}
     if 'show_chat_manually' not in st.session_state:
@@ -1218,10 +1076,6 @@ def main():
                     st.session_state['vectorstore'] = vectorstore
                     
                     
-                    for filename, text in st.session_state['pdf_texts'].items():
-                        if 'invoice' in filename.lower() or 'export' in filename.lower():
-                            st.session_state['quick_scan_results'] = quick_invoice_scan(text)
-                            break
                     
                     st.success("Your document are processed complete ✅")
         
@@ -1253,13 +1107,10 @@ def main():
                 st.session_state['vectorstore'] = None
                 st.session_state['chat_history'] = []
                 st.session_state['uploaded_files_list'] = []
-                st.session_state['quick_scan_results'] = None
                 st.session_state['extracted_json_data'] = {}
                 st.session_state['show_chat_manually'] = False
                 st.rerun()
     
-    st.markdown("---")
-    st.markdown("---")
     with st.expander("🏢 Documentation: About EATECH.AI", expanded=False):
         info = get_company_info()
         st.markdown(f"### {info['name']}")
@@ -1283,28 +1134,6 @@ def main():
     
     
     
-    if st.session_state.get('quick_scan_results'):
-        st.markdown("## 🔍 Quick Invoice Scan Results")
-        results = st.session_state['quick_scan_results']
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            if results['critical']:
-                st.error(f"**Critical Issues: {len(results['critical'])}**")
-                for issue in results['critical']:
-                    st.write(issue)
-        with col2:
-            if results['warnings']:
-                st.warning(f"**Warnings: {len(results['warnings'])}**")
-                for issue in results['warnings']:
-                    st.write(issue)
-        with col3:
-            if results['suggestions']:
-                st.info(f"**Suggestions: {len(results['suggestions'])}**")
-                for issue in results['suggestions']:
-                    st.write(issue)
-        
-        st.markdown("---")
     
     
     if not st.session_state['pdf_texts'] and not st.session_state.get('show_chat_manually'):
@@ -1313,50 +1142,35 @@ def main():
         
         st.markdown("## 🎯 What Can I Do For You?")
         
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
         
         with col1:
             st.markdown("""
             <div class="feature-box">
-            <h3>🔍 Invoice Error Detection</h3>
-            <p>Upload invoice → Get instant error report with missing fields, calculation errors, and compliance issues</p>
+            <h3>🔀 Compare PDF / Invoice</h3>
+            <p>Upload 2+ invoices → Get a <strong>table</strong> showing: ✅ common products, ❌ missing products, quantities, prices, and per-invoice details.</p>
             </div>
             """, unsafe_allow_html=True)
             
             st.markdown("""
             <div class="feature-box">
-            <h3>📋 Document Checklist</h3>
-            <p>Generate complete checklist of required documents for your specific export scenario</p>
+            <h3>📊 JSON Format</h3>
+            <p>Just ask AI "convert to JSON" → Get all available data extracted in clean, structured JSON format!</p>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             st.markdown("""
             <div class="feature-box">
-            <h3>📄 Auto-Generate Export Docs</h3>
-            <p>Create professional Commercial Invoices and Packing Lists from your data</p>
+            <h3>📝 Summary</h3>
+            <p>Get a concise summary and overview of all uploaded documents instantly.</p>
             </div>
             """, unsafe_allow_html=True)
             
             st.markdown("""
             <div class="feature-box">
-            <h3>⚠️ Compliance Risk Warnings</h3>
-            <p>Identify high-risk issues that could delay shipments or cause penalties</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with col3:
-            st.markdown("""
-            <div class="feature-box">
-            <h3>📊 Compare Invoices</h3>
-            <p>Upload 2+ invoices → Get detailed comparison table showing missing products, quantity differences, and pricing analysis</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.markdown("""
-            <div class="feature-box">
-            <h3>📊 Convert to JSON (NEW!)</h3>
-            <p>Just ask AI "convert this to JSON" → Get all data extracted in clean, structured JSON format!</p>
+            <h3>📄 Documentation</h3>
+            <p>Generate structured transaction reports, party details, and compliance summaries from your data.</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -1371,10 +1185,7 @@ def main():
         # Show invoice comparison button only if 2+ invoices uploaded
         user_docs = [name for name in st.session_state['pdf_texts'].keys() if "Knowledge Base" not in name]
         
-        if len(user_docs) >= 2:
-            col1, col2, col3, col4, col5, col6, col7, col8 = st.columns(8)
-        else:
-            col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
+        col1, col2, col3, col4 = st.columns(4)
         
         quick_action = None
         
@@ -1384,34 +1195,19 @@ def main():
             st.session_state['mascot_asked'] = False # Reset
             
         with col1:
-            if st.button("📊 Extract JSON"):
-                quick_action = "convert_to_json_button_clicked"
+            if st.button("🔀 Compare PDF"):
+                quick_action = "Compare all uploaded PDFs and invoices. Show me which products are available in both and which products are missing from each. Give details like product name, quantity, price, and available data in a clean table format. Do not show missing data."
         
         with col2:
             if st.button("📝 Summary"):
                 quick_action = "Summarize all uploaded documents and give me a clear overview"
         
         with col3:
-            if st.button("🔍 Check Errors"):
-                quick_action = "Check this invoice for all errors and missing mandatory fields"
+            if st.button("📊 JSON Format"):
+                quick_action = "convert_to_json_button_clicked"
         with col4:
-            if st.button("📄 Generate Docs"):
-                quick_action = "Generate export documents (Commercial Invoice and Packing List) from this data"
-        with col5:
-            if st.button("📚 Explain GST"):
-                quick_action = "Explain GST and customs duty concepts in simple language for my export"
-        with col6:
-            if st.button("📋 Checklist"):
-                quick_action = "Generate a complete document checklist for this export transaction"
-        with col7:
-            if st.button("⚠️ Risk Analysis"):
-                quick_action = "Analyze compliance risks in these documents"
-        
-        # Invoice comparison button (only show if 2+ invoices)
-        if len(user_docs) >= 2:
-            with col8:
-                if st.button("🔀 Compare Invoices"):
-                    quick_action = "Compare all uploaded invoices and show me a detailed table of products, quantities, prices, and identify missing items in each invoice"
+            if st.button("📄 Documentation"):
+                quick_action = "Provide full documentation and details for these documents including party details and transaction summary."
         
         
         user_question = st.text_input(
@@ -1422,63 +1218,41 @@ def main():
         
         
         
-        # Wrap selectbox in columns to make it smaller
-        sel_col1, sel_col2, sel_col3 = st.columns([2, 2, 4])
+        sel_col1, sel_col2, sel_col3 = st.columns([1.5, 1.5, 5])
         with sel_col1:
             task_type = st.selectbox(
-                "Task Type (Auto-detect enabled)",
-                ["Auto-detect", "Convert to JSON", "Invoice Comparison", "Create New Invoice", "Invoice Error Check", "Generate Export Documents", "GST/Customs Explanation", 
-                 "Document Checklist", "Risk Analysis", "Answer Question", "Email", "Summary", "Comparison"],
+                "Task Type",
+                ["Auto-detect", "Compare PDF", "Summary", "JSON Format", "Documentation", "Answer Question"],
                 help="Select task type or let AI auto-detect from your query"
+            )
+        
+        with sel_col2:
+            target_language = st.selectbox(
+                "Output Language",
+                ["English", "Arabic", "Hindi", "Bengali", "Spanish", "French", "German", "Chinese", "Japanese", "Russian", "Portuguese", "Italian", "Turkish", "Vietnamese", "Korean"],
+                help="Select the language for the AI response"
             )
         
         
         with st.expander("💡 Example Queries"):
             st.markdown("""
-            **📊 Convert to JSON (NEW!):**
+            **🔀 Compare PDF:**
+            - Compare these invoices and show which products are present in both
+            - Which products are missing from the second invoice?
+            - Compare both PDFs and show a table of all available products
+            
+            **📝 Summary:**
+            - Summarize the uploaded documents
+            - Give me a quick overview of what's in these PDFs
+            
+            **📊 JSON Format:**
             - Convert this PDF to JSON format
             - Extract all data as JSON
             - Give me JSON format of this invoice
-            - Convert to JSON
-            - I want JSON format
-            - Extract this document to JSON
             
-            **📊 Invoice Comparison:**
-            - Compare both invoices and show me missing products
-            - Which items are in invoice 1 but not in invoice 2?
-            - Create a comparison table of all products with quantities
-            - Show me quantity and price differences between invoices
-            
-            **🆕 Create New Invoice:**
-            - Create a professional invoice from this data
-            - Generate a new commercial invoice
-            - Make an invoice with all proper fields
-            
-            **🔍 Invoice Error Checking:**
-            - Check my invoice for all errors and missing fields
-            - Is my invoice compliant with export standards?
-            - What's wrong with this invoice?
-            
-            **📄 Export Document Generation:**
-            - Generate a commercial invoice from this data
-            - Create a packing list for these items
-            - Generate export documents for customs
-            
-            **📚 GST & Customs Education:**
-            - Explain GST for exports in simple terms
-            - What are Incoterms and which should I use?
-            - How does customs duty work for imports?
-            - What is duty drawback?
-            
-            **📋 Document Checklist:**
-            - What documents do I need for exporting to USA?
-            - Generate export documentation checklist
-            - What paperwork is required for customs clearance?
-            
-            **⚠️ Risk Analysis:**
-            - What compliance risks exist in my invoice?
-            - Can this shipment face customs delays?
-            - Analyze potential issues with this transaction
+            **📄 Documentation:**
+            - Provide documentation details for these files
+            - Extract party details and transaction summary
             """)
         
         
@@ -1491,7 +1265,7 @@ def main():
                 
                 # If JSON button was clicked, process all documents
                 if quick_action == "convert_to_json_button_clicked":
-                    st.markdown("## 📊 Response (Convert To Json)")
+                    st.markdown("## 📊 Response (JSON Format)")
                     
                     # Extract JSON from all uploaded PDFs (excluding knowledge base)
                     all_json_data = {}
@@ -1580,26 +1354,21 @@ def main():
                     
                 # elif user_question:
                 elif final_query:
-                    # Normal question processing
-                    if task_type == "Auto-detect":
-                        detected_task = detect_task_type(final_query)
-                    else:
-                        task_map = {
-                            "Convert to JSON": "convert_to_json",
-                            "Invoice Comparison": "invoice_compare",
-                            "Create New Invoice": "create_invoice",
-                            "Invoice Error Check": "invoice_check",
-                            "Generate Export Documents": "export_gen",
-                            "GST/Customs Explanation": "gst_explain",
-                            "Document Checklist": "checklist_gen",
-                            "Risk Analysis": "risk_warning",
-                            "Answer Question": "answer",
-                            "Email": "email",
-                            "Summary": "summary",
-                            "Comparison": "comparison"
-                        }
-                        detected_task = task_map.get(task_type, "answer")
+                    # Map simplified task types back to internal prompt keys
+                    task_mapping = {
+                        "Convert to JSON": "convert_to_json",
+                        "JSON Format": "convert_to_json",
+                        "Compare PDF": "invoice_compare",
+                        "Invoice Comparison": "invoice_compare",
+                        "Summary": "summary",
+                        "Documentation": "documentation"
+                    }
                     
+                    detected_task = task_type
+                    if task_type in task_mapping:
+                        detected_task = task_mapping[task_type]
+                    elif task_type == "Auto-detect":
+                        detected_task = detect_task_type(final_query)
                     
                     num_docs = len([k for k in st.session_state['pdf_texts'].keys() if "Knowledge Base" not in k])
                     k_value = min(15, (num_docs + 3) * 3)  
@@ -1618,19 +1387,17 @@ def main():
                         client,
                         final_query,
                         context_by_source,
-                        detected_task
+                        detected_task,
+                        target_language
                     )
                     
                     
                     task_icons = {
-                        "invoice_check": "🔍",
-                        "export_gen": "📄",
-                        "gst_explain": "📚",
-                        "checklist_gen": "📋",
-                        "risk_warning": "⚠️",
                         "invoice_compare": "📊",
-                        "create_invoice": "🆕",
-                        "convert_to_json": "📊"
+                        "summary": "📝",
+                        "convert_to_json": "📊",
+                        "documentation": "📄",
+                        "answer": "💡"
                     }
                     icon = task_icons.get(detected_task, "💡")
                     
@@ -1677,8 +1444,20 @@ def main():
                                 mime="text/plain"
                             )
                     else:
-                        # Normal markdown response for other tasks
-                        st.markdown(response)
+                        # Special rendering for invoice comparison
+                        if detected_task == "invoice_compare":
+                            st.markdown(response)
+                            st.markdown("---")
+                            st.download_button(
+                                label="⬇️ Download Comparison Report (.txt)",
+                                data=response,
+                                file_name=f"invoice_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                                mime="text/plain",
+                                use_container_width=True
+                            )
+                        else:
+                            # Normal markdown response for other tasks
+                            st.markdown(response)
                     
                     
                     with st.expander(f"📚 View Sources ({len(context_by_source)} documents referenced)"):

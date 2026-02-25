@@ -9,3 +9,5 @@ langchain-huggingface
 groq
 pandas
 duckduckgo-search
+fastapi
+uvicorn

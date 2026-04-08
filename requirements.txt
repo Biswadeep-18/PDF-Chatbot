@@ -11,3 +11,6 @@ pandas
 duckduckgo-search
 fastapi
 uvicorn
+motor
+passlib[bcrypt]
+pyjwt

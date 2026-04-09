@@ -3,9 +3,15 @@ import requests
 import base64
 import json
 from dotenv import load_dotenv
+import extra_streamlit_components as stx
 
 load_dotenv()
-API_URL = "http://localhost:8000"
+API_URL = "http://127.0.0.1:8001"
+
+def get_cookie_manager():
+    if "cookie_manager" not in st.session_state:
+        st.session_state.cookie_manager = stx.CookieManager(key="cookie_manager_init")
+    return st.session_state.cookie_manager
 
 # ─────────────────────────── API helpers ────────────────────────────
 
@@ -61,7 +67,42 @@ def api_ask(question, session_id, task_type, language):
         r.raise_for_status()
         return r.json()
     except Exception as e:
-        return {"answer": f"Error: {e}"}
+        return {"answer": f"I encountered an error while processing that. However, I can help you with other tasks like **Summary**, **JSON Extraction**, or **Document Comparison**. Would you like to try one of those?"}
+
+def api_ask_stream(question, session_id, task_type, language):
+    try:
+        payload = {"question": question, "session_id": session_id,
+                   "task_type": task_type, "language": language}
+        r = requests.post(f"{API_URL}/ask/stream", json=payload, headers=get_headers(), stream=True, timeout=60)
+        r.raise_for_status()
+        for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
+            if chunk:
+                yield chunk
+    except Exception as e:
+        yield f"I encountered an error while streaming the response: {e}. However, I can help you with other tasks like **Summary**, **JSON Extraction**, or **Document Comparison**."
+
+def api_health():
+    try:
+        r = requests.get(f"{API_URL}/health", timeout=2)
+        return r.status_code == 200
+    except:
+        return False
+
+def api_save_chat(session_id, messages, filenames):
+    try:
+        payload = {"session_id": session_id, "messages": messages, "filenames": filenames}
+        requests.post(f"{API_URL}/chats/save", json=payload, headers=get_headers(), timeout=10)
+    except:
+        pass
+
+def api_get_history():
+    try:
+        r = requests.get(f"{API_URL}/chats/history", headers=get_headers(), timeout=10)
+        if r.status_code == 200:
+            return r.json()
+    except:
+        pass
+    return []
 
 # ─────────────────────────── Theme CSS ────────────────────────────
 
@@ -201,7 +242,7 @@ def apply_theme(theme: str = "light"):
 
 # ─────────────────────────── Auth page ────────────────────────────
 
-def render_auth_page():
+def render_auth_page(cookie_manager):
     apply_theme("light")
     st.markdown("<br>", unsafe_allow_html=True)
     _, col, _ = st.columns([1, 1.6, 1])
@@ -227,6 +268,10 @@ def render_auth_page():
                     if code == 200:
                         st.session_state.token = resp["access_token"]
                         st.session_state.username = uname
+                        
+                        # Save cookie for persistence
+                        cookie_manager.set("token", resp["access_token"], key="set_cookie_token")
+                        
                         me = api_get_me()
                         if me:
                             st.session_state.profile = me
@@ -313,13 +358,16 @@ def render_profile_settings(profile: dict):
             st.info("No changes to save.")
 
     if st.button("🚪 Logout", use_container_width=True, key="logout_profile"):
+        # Clear cookies
+        cookie_manager.delete("token")
+        
         for k in ["token", "username", "profile", "messages", "session_id", "filenames"]:
             st.session_state.pop(k, None)
         st.rerun()
 
 # ─────────────────────────── Main App ────────────────────────────
 
-def render_main_app(profile: dict):
+def render_main_app(profile: dict, cookie_manager):
     theme = profile.get("theme", "light")
     apply_theme(theme)
 
@@ -349,6 +397,15 @@ def render_main_app(profile: dict):
             st.session_state.show_settings = not st.session_state.get("show_settings", False)
 
         st.divider()
+
+        # Backend Health Status
+        health = api_health()
+        if health:
+            st.sidebar.success("📡 Backend: Online")
+        else:
+            st.sidebar.error("❌ Backend: Offline")
+            if st.button("Retry Connection"):
+                st.rerun()
 
         # Document upload
         st.markdown("**📚 Documents**")
@@ -382,10 +439,43 @@ def render_main_app(profile: dict):
         lang_options = ["English", "Arabic", "Hindi", "Bengali", "Spanish", "French", "German"]
         st.session_state.language = st.selectbox("Language", lang_options, label_visibility="collapsed")
 
+        # Chat History Section
+        st.divider()
+        st.markdown("**📜 Recent Chats**")
+        history = api_get_history()
+        if history:
+            # Create a nice mapping for the dropdown
+            chat_map = {}
+            for item in history:
+                name = item["filenames"][0] if item["filenames"] else "No files"
+                if len(item["filenames"]) > 1:
+                    name += f" (+{len(item['filenames'])-1})"
+                
+                label = f"🕒 {item['updated_at'].split(' ')[1][:5]} | {name[:20]}"
+                chat_map[label] = item
+            
+            selected_chat = st.selectbox("Load Chat History", ["-- Select a chat --"] + list(chat_map.keys()), 
+                                         label_visibility="collapsed")
+            
+            if selected_chat != "-- Select a chat --":
+                item = chat_map[selected_chat]
+                st.session_state.messages = item["messages"]
+                st.session_state.session_id = item["session_id"]
+                st.session_state.filenames = item["filenames"]
+                st.session_state.show_settings = False
+                st.rerun()
+        else:
+            st.caption("No recent history")
+
         if st.session_state.get("messages"):
             st.divider()
-            if st.button("🗑️ Clear Chat", use_container_width=True, key="clear_chat"):
+            if st.button("🗑️ Clear & Save Current", use_container_width=True, key="clear_chat"):
+                # Save before clearing if it has messages
+                if st.session_state.session_id:
+                    api_save_chat(st.session_state.session_id, st.session_state.messages, st.session_state.filenames)
                 st.session_state.messages = []
+                st.session_state.session_id = None
+                st.session_state.filenames = []
                 st.rerun()
 
     # ── Main area ──
@@ -402,34 +492,91 @@ def render_main_app(profile: dict):
     # Chat history
     for msg in st.session_state.get("messages", []):
         with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+            content = msg["content"]
+            if content.strip().startswith("{") and content.strip().endswith("}"):
+                try:
+                    st.json(json.loads(content))
+                except:
+                    st.markdown(content)
+            else:
+                st.markdown(content)
 
     # Chat input
-    if prompt := st.chat_input("Ask about your documents..."):
-        st.session_state.setdefault("messages", []).append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+    prompt = st.chat_input("Ask about your documents...")
+    if prompt:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        st.rerun()
 
+    # Assistant response logic
+    if st.session_state.get("messages") and st.session_state.messages[-1]["role"] == "user":
+        last_user_prompt = st.session_state.messages[-1]["content"]
+        
         with st.chat_message("assistant"):
             if not st.session_state.get("session_id"):
                 response_text = "⚠️ Please upload and process at least one PDF first."
+                st.markdown(response_text)
             else:
-                with st.spinner("Analyzing..."):
-                    res = api_ask(
-                        prompt,
-                        st.session_state.session_id,
-                        st.session_state.get("task_type", "Auto-detect"),
-                        st.session_state.get("language", "English")
-                    )
-                    response_text = res.get("answer", "No response received.")
-            st.markdown(response_text)
+                # Streaming output
+                stream = api_ask_stream(
+                    last_user_prompt,
+                    st.session_state.session_id,
+                    st.session_state.get("task_type", "Auto-detect"),
+                    st.session_state.get("language", "English")
+                )
+                response_text = st.write_stream(stream)
+                
+                # Special handling for JSON Format display after stream
+                if st.session_state.get("task_type") == "JSON Format":
+                    try:
+                        # Re-render as JSON if valid
+                        data = json.loads(response_text)
+                        st.divider()
+                        st.json(data)
+                    except:
+                        pass
+            
             st.session_state.messages.append({"role": "assistant", "content": response_text})
+            
+            # Persist to MongoDB
+            if st.session_state.session_id:
+                api_save_chat(st.session_state.session_id, st.session_state.messages, st.session_state.filenames)
+                
+            st.rerun()
+
+    # Smart Suggestions (only visible after AI output)
+    if st.session_state.get("messages") and st.session_state.messages[-1]["role"] == "assistant":
+        last_msg = st.session_state.messages[-1]["content"]
+        
+        st.markdown("<p style='font-size:0.9rem; font-weight:600; color:#1E90FF; margin-top:1rem; margin-bottom:0.5rem;'>Suggested next steps:</p>", unsafe_allow_html=True)
+        
+        # Determine suggestions based on context
+        if "trouble" in last_msg.lower() or "error" in last_msg.lower():
+            sug_list = ["Summarize the uploaded documents", "Extract all data into JSON format", "Compare the PDF with standard compliance"]
+        else:
+            sug_list = ["Give me a short summary of this", "Highlight the most important numbers", "Ask if there are any risks found"]
+            
+        for i, sug in enumerate(sug_list):
+            if st.button(f"👉 {sug}", key=f"sug_btn_{i}", use_container_width=False, help="Click to ask this"):
+                st.session_state.messages.append({"role": "user", "content": sug})
+                st.rerun()
 
 # ─────────────────────────── Entry point ────────────────────────────
 
 def main():
     st.set_page_config(page_title="DocChat Pro", page_icon="📄", layout="wide",
                        initial_sidebar_state="expanded")
+
+    # Persistent Login check
+    cookie_manager = get_cookie_manager()
+    
+    # Wait briefly for cookie retrieval (important for stx component)
+    import time
+    if not st.session_state.get("token"):
+        # We check cookies
+        saved_token = cookie_manager.get("token")
+        if saved_token:
+            st.session_state.token = saved_token
+            st.rerun()
 
     # Init session state
     for key, default in [("token", None), ("username", None), ("profile", None),
@@ -447,10 +594,10 @@ def main():
             st.session_state.token = None  # token expired/invalid
 
     if not st.session_state.token:
-        render_auth_page()
+        render_auth_page(cookie_manager)
     else:
         profile = st.session_state.profile or {}
-        render_main_app(profile)
+        render_main_app(profile, cookie_manager)
 
 if __name__ == "__main__":
     main()

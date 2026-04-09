@@ -20,3 +20,15 @@ class UploadResponse(BaseModel):
     session_id: str
     filenames: List[str]
     total_pages: int
+
+class ChatSaveRequest(BaseModel):
+    session_id: str
+    messages: List[Dict]
+    filenames: List[str]
+
+class ChatHistoryResponse(BaseModel):
+    id: str
+    session_id: str
+    messages: List[Dict]
+    filenames: List[str]
+    updated_at: str

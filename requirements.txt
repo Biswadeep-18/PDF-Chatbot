@@ -14,3 +14,5 @@ uvicorn
 motor
 passlib[bcrypt]
 pyjwt
+python-multipart
+extra-streamlit-components

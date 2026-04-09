@@ -1,16 +1,18 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Header
+from fastapi.responses import StreamingResponse
 import uuid
 import io
 from datetime import datetime
 from typing import List, Dict
 
-from ..models.schemas import QuestionRequest, AnswerResponse, UploadResponse
+from ..models.schemas import QuestionRequest, AnswerResponse, UploadResponse, ChatSaveRequest, ChatHistoryResponse
 from ..services.pdf_service import PDFService
 from ..services.vector_service import VectorService
 from ..services.ai_service import AIService
 from ..services.profile_service import ProfileService
 from ..core.constants import INVOICE_STANDARDS, GST_CUSTOMS_GUIDE, COMPLIANCE_RISKS
 from ..core.auth_utils import decode_access_token
+from ..services.mongodb_service import db_service
 
 router = APIRouter()
 
@@ -73,6 +75,31 @@ async def upload_pdfs(files: List[UploadFile] = File(...), current_user: str = D
         total_pages=total_pages
     )
 
+@router.post("/ask/stream")
+async def ask_stream(request: QuestionRequest):
+    # Determine search strategy
+    if request.task_type == "Auto-detect":
+        task = ai_service.detect_task_type(request.question)
+    else:
+        task_mapping = {
+            "Summary": "summary",
+            "Compare PDF": "invoice_compare",
+            "JSON Format": "convert_to_json",
+            "Documentation": "documentation"
+        }
+        task = task_mapping.get(request.task_type, "answer")
+
+    if request.session_id not in knowledge_bases:
+        raise HTTPException(status_code=404, detail="Session not found or expired. Please re-upload documents.")
+
+    vectorstore = knowledge_bases[request.session_id]
+    context = vector_service.get_context(vectorstore, request.question)
+
+    return StreamingResponse(
+        ai_service.generate_response_stream(request.question, context, task, request.language),
+        media_type="text/plain"
+    )
+
 @router.post("/ask", response_model=AnswerResponse)
 async def ask(request: QuestionRequest, current_user: str = Depends(get_current_user)):
     """Ask a question using session_id"""
@@ -131,3 +158,19 @@ async def get_profile():
 @router.put("/profile")
 async def update_profile(data: Dict):
     return profile_service.update_profile(data)
+
+@router.post("/chats/save")
+async def save_chat(request: ChatSaveRequest, current_user: str = Depends(get_current_user)):
+    chat_data = {
+        "username": current_user,
+        "session_id": request.session_id,
+        "messages": request.messages,
+        "filenames": request.filenames,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    chat_id = await db_service.save_chat(chat_data)
+    return {"message": "Chat saved successfully", "chat_id": chat_id}
+
+@router.get("/chats/history", response_model=List[ChatHistoryResponse])
+async def get_chat_history(current_user: str = Depends(get_current_user)):
+    return await db_service.get_user_chats(current_user)

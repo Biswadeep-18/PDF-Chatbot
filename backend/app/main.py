@@ -12,7 +12,15 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup_event():
-    db_service.connect()
+    try:
+        db_service.connect()
+        print("Backend startup successful")
+    except Exception as e:
+        print(f"Backend startup failed: {e}")
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "project": settings.PROJECT_NAME}
 
 app.add_middleware(
     CORSMiddleware,
